@@ -20,6 +20,10 @@ Implemented things:
 * clearing the whole keyboard in both modes
 * GUI in Tkinter
 
+As for now, you must switch keyboard to the specific mode in order to use
+that mode's functions. In the future the driver will switch the modes
+automatically.
+
 To implement (and to check if it's possible):
 
 * key mappings
