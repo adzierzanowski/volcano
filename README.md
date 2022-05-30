@@ -27,6 +27,12 @@ $ sudo ./main pck/start pck/norm-on pck/end
 $ sudo ./main pck/start pck/col0 pck/col1 pck/end
 ```
 
+Packets are just binary files (from 1 to 64 bytes in size) which are directly
+sent to the keyboard as a control transfer.
+
+To make such packet, you can click "export binary" in the DMS URB view or
+use some hex editor.
+
 Of course this is just for the development stage.
 
 # Contributing
