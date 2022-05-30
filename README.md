@@ -51,7 +51,7 @@ EXAMPLES:
 
 ## Packets
 
-If you compile `packets_cli.c`  instead of `cli.c` you'll get an executable which
+If you compile `packets_cli.c`  instead of `main.c` you'll get an executable which
 takes filenames as arguments. Each file is a packet file.
 
 Packets are just binary files (from 1 to 64 bytes in size) which are directly
