@@ -37,13 +37,22 @@ EXAMPLES:
     volcano -C clear-m1    # clear the entire keyboard in custom mode
 ```
 
+## Packets
+
+If you compile `main.c`  instead of `main2.c` you'll get an executable which
+takes filenames as arguments. Each file is a packet file.
+
 Packets are just binary files (from 1 to 64 bytes in size) which are directly
 sent to the keyboard as a control transfer.
 
 To make such packet, you can click "export binary" in the DMS URB view or
 use some hex editor.
 
-Of course this is just for the development stage.
+eg.
+
+```bash
+$ volcano pck/start pck/norm-on pck/end
+```
 
 ---
 
