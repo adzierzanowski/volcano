@@ -50,6 +50,12 @@ or
 kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
 ```
 
+# Usage
+
+```
+
+```
+
 # Contributing
 
 Please make a pull request if you've managed to get a grip of the commands.

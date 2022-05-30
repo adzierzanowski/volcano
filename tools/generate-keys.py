@@ -22,13 +22,16 @@ for fname in os.listdir('pck/keys'):
 
 for k in sorted(keys, key=lambda k: k[1]+k[-1]*1000):
   kname, d0, d1, d2, d3, d4, d5, d6 = k
-  print(
-    f'{kname:>20}  ',
-    f'{d0:02x}',
-    f'{d1:02x}',
-    f'{d2:02x}',
-    f'{d3:02x}',
-    f'{d4:02x}',
-    f'{d5:02x}',
-    f'{d6:02x}')
+  #print(
+  #  f'{kname:>20}  ',
+  #  f'{d0:02x}',
+  #  f'{d1:02x}',
+  #  f'{d2:02x}',
+  #  f'{d3:02x}',
+  #  f'{d4:02x}',
+  #  f'{d5:02x}',
+  #  f'{d6:02x}')
   #print(f'#define KEY_{kname} 0x{d0:02x}{d1:02x}{d2:02x}')
+  print('  {' f' .name = "{kname}", .val = KEY_{kname} ' '},')
+
+print(len(keys))

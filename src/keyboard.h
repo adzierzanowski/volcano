@@ -37,7 +37,7 @@
 #define KEY_8 0x6b5700
 #define KEY_9 0x6e5a00
 #define KEY_0 0x715d00
-#define KEY_MINUS 0x020000
+#define KEY_MINUS 0x048200
 #define KEY_PLUS 0x776300
 #define KEY_BACKSPACE 0x7a6600
 #define KEY_INS 0x7d6900
@@ -58,6 +58,7 @@
 #define KEY_LBRACKET 0xb39f00
 #define KEY_RBRACKET 0xb6a200
 #define KEY_BACKSLASH 0xb9a500
+#define KEY_DEL 0x04ca00
 #define KEY_END 0xbfab00
 #define KEY_PD 0xc2ae00
 
@@ -108,6 +109,14 @@
 
 #include "fmt.h"
 
+struct key_t {
+  const char *name;
+  uint32_t val;
+};
+
+const struct key_t keys[88];
+const size_t keys_sz;
+
 bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh);
 bool kbd_close(libusb_context *ctx, libusb_device_handle *kbdh);
 bool kbd_send(libusb_device_handle *kbdh, uint8_t msg[64]);
@@ -115,6 +124,13 @@ bool kbd_recv(
   libusb_device_handle *kbdh, size_t sz, uint8_t *buf, unsigned int timeout);
 bool kbd_send_and_recv(libusb_device_handle *kbdh, uint8_t msg[64]);
 bool kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...);
-bool kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color);
+
+bool kbd_send_start(libusb_device_handle *kbdh);
+bool kbd_send_end(libusb_device_handle *kbdh);
+void kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color);
+void kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b);
+void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
+const struct key_t *kbd_get_key(const char *name);
+
 
 #endif
