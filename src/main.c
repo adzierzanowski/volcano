@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
     kbd_recv(kbdh, 64, (uint8_t *) buf, 50);
   }
 
+  free(buf);
   kbd_close(ctx, kbdh);
   return 0;
 }
