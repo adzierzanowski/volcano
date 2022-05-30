@@ -100,7 +100,6 @@ bool kbd_validate_response(uint8_t *sent, uint8_t *recv, size_t sz) {
 }
 
 bool kbd_send_and_recv(libusb_device_handle *kbdh, uint8_t msg[64]) {
-  printf("send and receive");
   if (!kbd_send(kbdh, msg)) {
     return false;
   }
@@ -142,8 +141,8 @@ bool kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color)
   uint8_t g = (color >> 8) & 0xff;
   uint8_t b = color & 0xff;
 
-  kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
+  //kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
   kbd_va_send_and_recv(
     kbdh, 11, 0x04, d1, 0x00, 0x11, 0x03, d5, d6, 0x00, r, b, g );
-  kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
+  //kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
 }
