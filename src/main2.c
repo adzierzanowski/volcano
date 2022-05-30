@@ -27,6 +27,8 @@ void usage() {
     "EXAMPLES:\n"
     "    volcano -k BACKSPACE -r 255 -g 0 -b 0      # set backspace to red\n"
     "    volcano -c -g 255              # set the entire keyboard to green\n"
+    "    volcano -C clear                      # clear the entire keyboard\n"
+    "    volcano -C clear-m1    # clear the entire keyboard in custom mode\n"
     "\n"
     "CODE REPOSITORY:"
   );

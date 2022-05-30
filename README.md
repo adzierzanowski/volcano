@@ -19,12 +19,22 @@ Studio](https://www.hhdsoftware.com/device-monitoring-studio).
 
 The arguments to the main program are filenames with binary packets.
 
-```bash
-# Set "Normally on" theme
-$ sudo ./main pck/start pck/norm-on pck/end
+```
+OPTIONS:
+    -c         set color for entire keyboard
+    -C         pass a command
+    -h         show this help message and exit
+    -k         select a key for the color change
+    -r         red value
+    -R (0|1)   rainbow
+    -g         green value
+    -b         blue value
 
-# Set predefined color
-$ sudo ./main pck/start pck/col0 pck/col1 pck/end
+EXAMPLES:
+    volcano -k BACKSPACE -r 255 -g 0 -b 0      # set backspace to red
+    volcano -c -g 255              # set the entire keyboard to green
+    volcano -C clear                      # clear the entire keyboard
+    volcano -C clear-m1    # clear the entire keyboard in custom mode
 ```
 
 Packets are just binary files (from 1 to 64 bytes in size) which are directly
