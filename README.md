@@ -5,7 +5,7 @@ the only available drivers are made for Windows.
 
 I'm not really sure but it should also work on Linux.
 
-# Development state
+# Development status
 
 The communication with the keyboard works just fine but there are many commands
 to decipher. As for now I've managed to change the backlight color in the
@@ -14,6 +14,20 @@ on current keyboard state which makes it harder to reverse engineer.
 
 To sniff USB communication with the original driver I use [Device Monitoring
 Studio](https://www.hhdsoftware.com/device-monitoring-studio).
+
+# Usage
+
+The arguments to the main program are filenames with binary packets.
+
+```bash
+# Set "Normally on" theme
+$ sudo ./main pck/start pck/norm-on pck/end
+
+# Set predefined color
+$ sudo ./main pck/start pck/col0 pck/col1 pck/end
+```
+
+Of course this is just for the development stage.
 
 # Contributing
 
