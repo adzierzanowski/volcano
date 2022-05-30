@@ -5,8 +5,11 @@ CFLAGS = -Wall \
 -lusb-1.0 \
 -DDEBUG
 
-all: src/main2.c src/keyboard.c src/fmt.c
-	$(CC) $(CFLAGS) src/main2.c src/keyboard.c src/fmt.c -o volcano
+all: src/main.c src/keyboard.c src/fmt.c
+	$(CC) $(CFLAGS) src/main.c src/keyboard.c src/fmt.c -o volcano
+
+packets: src/packets_cli.c src/keyboard.c src/fmt.c
+	$(CC) $(CFLAGS) src/packets_cli.c src/keyboard.c src/fmt.c -o volcano
 
 info: info.c
 	$(CC) $(CFLAGS) info.c -o info

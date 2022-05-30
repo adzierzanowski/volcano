@@ -8,12 +8,24 @@ I'm not really sure but it should also work on Linux.
 # Development status
 
 The communication with the keyboard works just fine but there are many commands
-to decipher. As for now I've managed to change the backlight color in the
-simplest "Normally on" LED sequence but it seems that the commands are dependent
-on current keyboard state which makes it harder to reverse engineer.
+left to decipher.
 
 To sniff USB communication with the original driver I use [Device Monitoring
 Studio](https://www.hhdsoftware.com/device-monitoring-studio).
+
+Implemented things:
+
+* setting single keys to a specified color in "Custom" mode
+* setting the whole keyboard color in "Normally on" mode
+* clearing the whole keyboard in both modes
+* GUI in Tkinter
+
+To implement (and to check if it's possible):
+
+* key mappings
+* macros
+* switching between color schemes
+* defining custom schemes
 
 # Usage
 
@@ -39,7 +51,7 @@ EXAMPLES:
 
 ## Packets
 
-If you compile `main.c`  instead of `main2.c` you'll get an executable which
+If you compile `packets_cli.c`  instead of `cli.c` you'll get an executable which
 takes filenames as arguments. Each file is a packet file.
 
 Packets are just binary files (from 1 to 64 bytes in size) which are directly
@@ -67,12 +79,6 @@ or
 
 ```c
 kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
-```
-
-# Usage
-
-```
-
 ```
 
 # Contributing
