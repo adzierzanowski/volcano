@@ -3,6 +3,8 @@
 This is an attempt to modify keyboard state (colors, macros) using macOS because
 the only available drivers are made for Windows.
 
+I'm not really sure but it should also work on Linux.
+
 # Development state
 
 The communication with the keyboard works just fine but there are many commands
