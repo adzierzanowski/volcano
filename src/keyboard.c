@@ -132,3 +132,18 @@ bool kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...) {
 
   return status;
 }
+
+bool kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color) {
+
+  uint8_t d1 = (key >> 16) & 0xff;
+  uint8_t d5 = (key >> 8) & 0xff;
+  uint8_t d6 = key & 0xff;
+  uint8_t r = (color >> 16) & 0xff;
+  uint8_t g = (color >> 8) & 0xff;
+  uint8_t b = color & 0xff;
+
+  kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
+  kbd_va_send_and_recv(
+    kbdh, 11, 0x04, d1, 0x00, 0x11, 0x03, d5, d6, 0x00, r, b, g );
+  kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
+}
