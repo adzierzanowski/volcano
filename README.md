@@ -35,6 +35,21 @@ use some hex editor.
 
 Of course this is just for the development stage.
 
+---
+
+Of course you can modify the code directly and use
+
+```c
+uint8_t start[64] = { 0x04, 0x01, 0x00, 0x01 };
+kbd_send_and_recv(kbdh, start);
+```
+
+or
+
+```c
+kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
+```
+
 # Contributing
 
 Please make a pull request if you've managed to get a grip of the commands.
