@@ -15,7 +15,7 @@ void usage() {
     "Modecom Volcano Lanparty RGB userland driver\n"
     "\n"
     "OPTIONS:\n"
-    "    -m         select mode\n"
+    "    -m         select mode ('list' to list all modes)\n"
     "    -c         set color for entire keyboard\n"
     "    -C         pass a command\n"
     "    -h         show this help message and exit\n"

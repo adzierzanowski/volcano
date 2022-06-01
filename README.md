@@ -38,6 +38,7 @@ The arguments to the main program are filenames with binary packets.
 
 ```
 OPTIONS:
+    -m         select mode ('list' to list all modes)
     -c         set color for entire keyboard
     -C         pass a command
     -h         show this help message and exit
