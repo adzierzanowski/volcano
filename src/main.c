@@ -6,7 +6,7 @@
 
 #include "keyboard.h"
 
-#define VERSION "0.0.1"
+#define VERSION "0.0.2"
 
 void usage() {
   puts(
@@ -15,6 +15,7 @@ void usage() {
     "Modecom Volcano Lanparty RGB userland driver\n"
     "\n"
     "OPTIONS:\n"
+    "    -m         select mode\n"
     "    -c         set color for entire keyboard\n"
     "    -C         pass a command\n"
     "    -h         show this help message and exit\n"
@@ -47,6 +48,7 @@ int main(int argc, char *argv[]) {
   char opt;
   const char *keyname = NULL;
   const char *command = NULL;
+  const char *mode = NULL;
   uint8_t r = 0;
   uint8_t g = 0;
   uint8_t b = 0;
@@ -54,7 +56,7 @@ int main(int argc, char *argv[]) {
   bool rainbow = false;
   bool rainbow_passed = false;
 
-  while ((opt = getopt(argc, argv, "cC:hk:r:R:g:b:")) != -1) {
+  while ((opt = getopt(argc, argv, "b:cC:g:hk:m:r:R:")) != -1) {
     switch (opt) {
       case 'c':
         set_color = true;
@@ -70,6 +72,10 @@ int main(int argc, char *argv[]) {
 
       case 'k':
         keyname = optarg;
+        break;
+
+      case 'm':
+        mode = optarg;
         break;
 
       case 'r':
@@ -131,7 +137,7 @@ int main(int argc, char *argv[]) {
     kbd_send_end(kbdh);
 
   } else if (keyname) {
-    const struct key_t *key = kbd_get_key(keyname);
+    const struct kbd_key_t *key = kbd_get_key(keyname);
 
     if (key) {
       kbd_send_start(kbdh);
@@ -140,6 +146,17 @@ int main(int argc, char *argv[]) {
     } else {
       printerr("Key %s not found\n", keyname);
     }
+  } else if (mode) {
+    if (strcmp(mode, "list") == 0) {
+      kbd_print_modes();
+
+    } else {
+      kbd_send_start(kbdh);
+      kbd_set_mode(kbdh, kbd_get_mode(mode));
+      kbd_send_end(kbdh);
+    }
+
+
   } else if (rainbow_passed) {
     kbd_send_start(kbdh);
     kbd_set_rainbow(kbdh, rainbow);

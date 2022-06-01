@@ -109,12 +109,35 @@
 
 #include "fmt.h"
 
-struct key_t {
+struct kbd_key_t {
   const char *name;
   uint32_t val;
 };
 
-const struct key_t keys[88];
+enum kbd_mode_t {                    // Original name             Options
+  KBD_MODE_NORMAL = 0x0d,            // Normally on               C/R
+  KBD_MODE_CUSTOM = 0x1b,            // Custom settings           n/a
+
+  KBD_MODE_STREAM = 0x08,            // Go with the stream        S, C/R, Direction
+  KBD_MODE_CLOUDS = 0x09,            // Clouds fly                S, C/R, Direction
+  KBD_MODE_SWIRL = 0x0a,             // Winding paths             S. C/R, Direction
+  KBD_MODE_RAINBOW_BREATHING = 0x0b, // The trial of light        S
+  KBD_MODE_BREATHING = 0x0c,         // Breathing                 S, C/R
+  KBD_MODE_HOTMAP = 0x0e,            // Pass without trace        S, C/R
+  KBD_MODE_RIPPLE = 0x0f,            // Ripple graff              S, C/R
+  KBD_MODE_RIPPLE_LINES = 0x10,      // Fast run without trace    S, C/R
+  KBD_MODE_SNOW = 0x11,              // Snow winter jasmine       S
+  KBD_MODE_RAINBOW_DOTS = 0x12,      // Flowers blooming          S
+  KBD_MODE_RAINBOW_LINES = 0x13,     // Swift action              S, Direction
+  KBD_MODE_TRAINGULAR_WAVES = 0x14,  // Hurricane                 S, C/R
+  KBD_MODE_DRAIN = 0x15,             // Accumulate                S, C/R
+  KBD_MODE_MATRIX = 0x16,            // Digital times             S. C/R
+  KBD_MODE_SCANLINE = 0x17,          // Both ways                 C/R
+  KBD_MODE_GRADIENT = 0x18,          // Surmount                  Predefined gradient
+  KBD_MODE_RAINBOW_CIRCLES = 0x19,   // Fast and the Furious      Inward/Outward
+};
+
+const struct kbd_key_t keys[88];
 const size_t keys_sz;
 
 bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh);
@@ -130,7 +153,10 @@ bool kbd_send_end(libusb_device_handle *kbdh);
 void kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color);
 void kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b);
 void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
-const struct key_t *kbd_get_key(const char *name);
+void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode);
+void kbd_print_modes(void);
+enum kbd_mode_t kbd_get_mode(const char *modestr);
+const struct kbd_key_t *kbd_get_key(const char *name);
 
 
 #endif

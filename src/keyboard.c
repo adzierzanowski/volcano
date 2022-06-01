@@ -152,7 +152,7 @@ bool kbd_send_end(libusb_device_handle *kbdh) {
   return kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
 }
 
-const struct key_t keys[88] = {
+const struct kbd_key_t keys[88] = {
   { .name = "PLUS", .val = KEY_PLUS },
   { .name = "DEL", .val = KEY_DEL },
   { .name = "A", .val = KEY_A },
@@ -245,7 +245,7 @@ const struct key_t keys[88] = {
 
 const size_t keys_sz = sizeof keys / sizeof keys[0];
 
-const struct key_t *kbd_get_key(const char *name) {
+const struct kbd_key_t *kbd_get_key(const char *name) {
   for (int i = 0; i < keys_sz; i++) {
     if (strcmp(name, keys[i].name) == 0) {
       return &keys[i];
@@ -267,4 +267,76 @@ void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow) {
   } else {
     kbd_va_send_and_recv(kbdh, 8, 0x04, 0x35, 0x00, 0x06, 0x01, 0x2e);
   }
+}
+
+enum kbd_mode_t kbd_get_mode(const char *modestr) {
+  if (strcmp(modestr, "norm") == 0) {
+    return KBD_MODE_NORMAL;
+  } else if (strcmp(modestr, "custom") == 0) {
+    return KBD_MODE_CUSTOM;
+  } else if (strcmp(modestr, "stream") == 0) {
+    return KBD_MODE_STREAM;
+  } else if (strcmp(modestr, "clouds") == 0) {
+    return KBD_MODE_CLOUDS;
+  } else if (strcmp(modestr, "swirl") == 0) {
+    return KBD_MODE_SWIRL;
+  } else if (strcmp(modestr, "rgb-breath") == 0) {
+    return KBD_MODE_RAINBOW_BREATHING;
+  } else if (strcmp(modestr, "breath") == 0) {
+    return KBD_MODE_BREATHING;
+  } else if (strcmp(modestr, "hotmap") == 0) {
+    return KBD_MODE_HOTMAP;
+  } else if (strcmp(modestr, "ripple") == 0) {
+    return KBD_MODE_RIPPLE;
+  } else if (strcmp(modestr, "ripple-lines") == 0) {
+    return KBD_MODE_RIPPLE_LINES;
+  } else if (strcmp(modestr, "snow") == 0) {
+    return KBD_MODE_SNOW;
+  } else if (strcmp(modestr, "rgb-dots") == 0) {
+    return KBD_MODE_RAINBOW_DOTS;
+  } else if (strcmp(modestr, "rgb-lines") == 0) {
+    return KBD_MODE_RAINBOW_LINES;
+  } else if (strcmp(modestr, "triangular") == 0) {
+    return KBD_MODE_TRAINGULAR_WAVES;
+  } else if (strcmp(modestr, "drain") == 0) {
+    return KBD_MODE_DRAIN;
+  } else if (strcmp(modestr, "matrix") == 0) {
+    return KBD_MODE_MATRIX;
+  } else if (strcmp(modestr, "scanline") == 0) {
+    return KBD_MODE_SCANLINE;
+  } else if (strcmp(modestr, "gradient") == 0) {
+    return KBD_MODE_GRADIENT;
+  } else if (strcmp(modestr, "rgb-circle") == 0) {
+    return KBD_MODE_RAINBOW_CIRCLES;
+  }
+
+  return KBD_MODE_NORMAL;
+}
+
+void kbd_print_modes(void) {
+  puts("    NAME         -- ORIGINAL NAME");
+  puts("    norm         -- Normally on");
+  puts("    custom       -- Custom settings");
+  puts("    stream       -- Go with the stream");
+  puts("    clouds       -- Clouds fly");
+  puts("    swirl        -- Winding paths");
+  puts("    rgb-breath   -- The trial of light");
+  puts("    breath       -- Breathing");
+  puts("    hotmap       -- Pass without trace");
+  puts("    ripple       -- Ripple graff");
+  puts("    ripple-lines -- Fast run without trace");
+  puts("    snow         -- Snow winter jasmine");
+  puts("    rgb-dots     -- Flowers blooming");
+  puts("    rgb-lines    -- Swift action");
+  puts("    triangular   -- Hurricane");
+  puts("    drain        -- Accumulate");
+  puts("    matrix       -- Digital times");
+  puts("    scanline     -- Both ways");
+  puts("    gradient     -- Surmount");
+  puts("    rgb-circle   -- Fast and the Furious");
+}
+
+void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode) {
+  kbd_va_send_and_recv(
+    kbdh, 9, 0x04, mode, 0x00, 0x06, 0x01, 0x00, 0x00, 0x00, mode - 0x07);
 }

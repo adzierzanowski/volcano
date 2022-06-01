@@ -16,8 +16,9 @@ Studio](https://www.hhdsoftware.com/device-monitoring-studio).
 Implemented things:
 
 * setting single keys to a specified color in "Custom" mode
-* setting the whole keyboard color in "Normally on" mode
-* clearing the whole keyboard in both modes
+* setting the whole keyboard color in supported modes
+* clearing the whole keyboard
+* switching between color schemes
 * GUI in Tkinter
 
 As for now, you must switch keyboard to the specific mode in order to use
@@ -26,10 +27,10 @@ automatically.
 
 To implement (and to check if it's possible):
 
-* key mappings
+* key mappings (this is certainly possible)
 * macros
-* switching between color schemes
 * defining custom schemes
+* update settings on PnP
 
 # Usage
 
