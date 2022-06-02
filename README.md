@@ -34,8 +34,6 @@ To implement (and to check if it's possible):
 
 # Usage
 
-The arguments to the main program are filenames with binary packets.
-
 ```
 OPTIONS:
     -B (0-4)       set brightness (0-4)
