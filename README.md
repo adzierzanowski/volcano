@@ -38,16 +38,21 @@ The arguments to the main program are filenames with binary packets.
 
 ```
 OPTIONS:
-    -m         select mode ('list' to list all modes)
-    -M         remap keys
-    -c         set color for entire keyboard
-    -C         pass a command
-    -h         show this help message and exit
-    -k         select a key for the color change
-    -r         red value
-    -R (0|1)   rainbow
-    -g         green value
-    -b         blue value
+    -B (0-4)       set brightness (0-4)
+    -D (0-1)       set direction (0-1)
+    -S (0-4)       set speed
+    -R (0-1)       set rainbow
+    -H (0-3)       set report rate (0-3; 125 Hz - 1000 Hz)
+
+    -m MODE        select color mode ('list' to list all modes)
+    -M FILE        remap keyboard keys
+    -c             set color for entire keyboard
+    -C CMD         pass a command
+    -h             show this help message and exit
+    -k KEY         select a key for the color change
+    -r (0-255)     red value
+    -g (0-255)     green value
+    -b (0-255)     blue value
 
 EXAMPLES:
     volcano -k BACKSPACE -r 255 -g 0 -b 0      # set backspace to red
