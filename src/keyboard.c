@@ -268,9 +268,10 @@ void kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b) 
 void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow) {
   kbd_send_start(kbdh);
   if (rainbow) {
-    kbd_va_send_and_recv(kbdh, 8, 0x04, 0x36, 0x00, 0x06, 0x01, 0x2e, 0x00, 0x01);
+    kbd_va_send_and_recv(
+      kbdh, 9, 0x04, 0x0c, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x01);
   } else {
-    kbd_va_send_and_recv(kbdh, 8, 0x04, 0x35, 0x00, 0x06, 0x01, 0x2e);
+    kbd_va_send_and_recv(kbdh, 6, 0x04, 0x0b, 0x00, 0x06, 0x01, 0x04);
   }
   kbd_send_end(kbdh);
 }
@@ -320,26 +321,26 @@ enum kbd_mode_t kbd_get_mode(const char *modestr) {
 }
 
 void kbd_print_modes(void) {
-  puts("    NAME         -- ORIGINAL NAME");
-  puts("    norm         -- Normally on");
-  puts("    custom       -- Custom settings");
-  puts("    stream       -- Go with the stream");
-  puts("    clouds       -- Clouds fly");
-  puts("    swirl        -- Winding paths");
-  puts("    rgb-breath   -- The trial of light");
-  puts("    breath       -- Breathing");
-  puts("    hotmap       -- Pass without trace");
-  puts("    ripple       -- Ripple graff");
-  puts("    ripple-lines -- Fast run without trace");
-  puts("    snow         -- Snow winter jasmine");
-  puts("    rgb-dots     -- Flowers blooming");
-  puts("    rgb-lines    -- Swift action");
-  puts("    triangular   -- Hurricane");
-  puts("    drain        -- Accumulate");
-  puts("    matrix       -- Digital times");
-  puts("    scanline     -- Both ways");
-  puts("    gradient     -- Surmount");
-  puts("    rgb-circle   -- Fast and the Furious");
+  puts("    NAME            Opts   ORIGINAL NAME");
+  puts("    norm         -- -CR- -- Normally on");
+  puts("    custom       --      -- Custom settings");
+  puts("    stream       -- SCRD -- Go with the stream");
+  puts("    clouds       -- SCRD -- Clouds fly");
+  puts("    swirl        -- SCRD -- Winding paths");
+  puts("    rgb-breath   -- S--- -- The trial of light");
+  puts("    breath       -- SCR- -- Breathing");
+  puts("    hotmap       -- SCR- -- Pass without trace");
+  puts("    ripple       -- SCR- -- Ripple graff");
+  puts("    ripple-lines -- SCR- -- Fast run without trace");
+  puts("    snow         -- S--- -- Snow winter jasmine");
+  puts("    rgb-dots     -- S--- -- Flowers blooming");
+  puts("    rgb-lines    -- S--D -- Swift action");
+  puts("    triangular   -- SCR- -- Hurricane");
+  puts("    drain        -- SCR- -- Accumulate");
+  puts("    matrix       -- SCR- -- Digital times");
+  puts("    scanline     -- -CR- -- Both ways");
+  puts("    gradient     -- ---- -- Surmount");
+  puts("    rgb-circle   -- ---D -- Fast and the Furious");
 }
 
 void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode) {
@@ -425,33 +426,41 @@ void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *k) {
   };
 
   uint8_t line5[64] = {
-    0x04,        0xc0,   0x04,         0x08,
-    0x38,   0xe0,    0x00,    0x00,
-    k->rbracket, 0x02,   0x00,         0x00,
-    0x02,   0x02,    0x87,    0x02,
-    0x00,        0x00,   0x02,         0x00,
-    0x00,   0x02,    k->backspace_m,    k->backspace,
-    0x02,        k->backslash_m,   k->backslash, 0x02,
-    k->enter_m,   k->enter,    0x02,    k->rshift_m,
-    k->rshift,        0x02,   0x00,         0x00,
-    0x02,   k->ps_m,    k->ps,   0x02,
-    k->ins_m,        k->ins, 0x02,         k->del_m,
-    k->del, 0x02,    0x00,    0x00,
-    0x02,        0x00,   0x00,         0x02,
-    k->left_m,   k->left, 0x02,    k->sl_m,
-    k->sl,       0x02,   k->hm_m,         k->hm,
-    0x02,   k->end_m,    k->end,  0x02
+    0x04,        0xc0,           0x04,           0x08,
+    0x38,        0xe0,           0x00,           0x00,
+    k->rbracket, 0x02,           0x00,           0x00,
+    0x02,        0x02,           0x87,           0x02,
+    0x00,        0x00,           0x02,           0x00,
+    0x00,        0x02,           k->backspace_m, k->backspace,
+    0x02,        k->backslash_m, k->backslash,   0x02,
+    k->enter_m,  k->enter,       0x02,           k->rshift_m,
+    k->rshift,   0x02,           0x00,           0x00,
+    0x02,        k->ps_m,        k->ps,          0x02,
+    k->ins_m,    k->ins,         0x02,           k->del_m,
+    k->del,      0x02,           0x00,           0x00,
+    0x02,        0x00,           0x00,           0x02,
+    k->left_m,   k->left,        0x02,           k->sl_m,
+    k->sl,       0x02,           k->hm_m,        k->hm,
+    0x02,        k->end_m,       k->end,         0x02
   };
 
   uint8_t line6[64] = {
-    0x04,  0xe2,     0x04,  0x08, 0x38,  0x18,  0x01, 0x00,
-    0x00,  0x00,     0x02,  k->up_m, k->up, 0x02,  k->down_m, k->down,
-    0x02,  k->pb_m,     k->pb, 0x02, 0x02,  k->pu, 0x02, k->pd_m,
-    k->pd, 0x02,     0x00,  0x00, 0x02,  0x00,  0x00, 0x02,
-    k->right_m,  k->right, 0x02,  0x00, 0x00,  0x02,  0x02, 0x53,
-    0x02,  0x02,     0x5f,  0x02, 0x02,  0x5c,  0x02, 0x02,
-    0x59,  0x02,     0x00,  0x00, 0x02,  0x00,  0x00, 0x02,
-    0x02,  0x54,     0x02,  0x02, 0x60,  0x02,  0x02, 0x5d
+    0x04,       0xe2,     0x04,      0x08,
+    0x38,       0x18,     0x01,      0x00,
+    0x00,       0x00,     0x02,      k->up_m,
+    k->up,      0x02,     k->down_m, k->down,
+    0x02,       k->pb_m,  k->pb,     0x02,
+    k->pu_m,    k->pu,    0x02,      k->pd_m,
+    k->pd,      0x02,     0x00,      0x00,
+    0x02,       0x00,     0x00,      0x02,
+    k->right_m, k->right, 0x02,      0x00,
+    0x00,       0x02,     0x02,      0x53,
+    0x02,       0x02,     0x5f,      0x02,
+    0x02,       0x5c,     0x02,      0x02,
+    0x59,       0x02,     0x00,      0x00,
+    0x02,       0x00,     0x00,      0x02,
+    0x02,       0x54,     0x02,      0x02,
+    0x60,       0x02,     0x02,      0x5d
   };
 
   uint8_t line7[64] = {
@@ -496,7 +505,7 @@ void kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level) {
 void kbd_set_speed(libusb_device_handle *kbdh, uint8_t level) {
   kbd_send_start(kbdh);
   kbd_va_send_and_recv(
-    kbdh, 8, 0x04, 0x0d-level, 0x00, 0x06, 0x01, 0x02, 0x00, 0x04-level);
+    kbdh, 9, 0x04, 0x0d - level, 0x00, 0x06, 0x01, 0x02, 0x00, 0x00, 0x04 - level);
   kbd_send_end(kbdh);
 }
 

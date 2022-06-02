@@ -188,8 +188,8 @@ int main(int argc, char *argv[]) {
 
   } else if (rainbow_passed) {
     kbd_set_rainbow(kbdh, rainbow);
-  } else if (remap) {
 
+  } else if (remap) {
     struct kbd_keymap_t kmap = {
       .a = KBD_KMAP_A,
       .a_m = KBD_KMAP_MODE_NORMAL,
