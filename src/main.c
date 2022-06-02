@@ -6,7 +6,7 @@
 
 #include "keyboard.h"
 
-#define VERSION "0.0.3"
+#define VERSION "0.1.0"
 
 void usage() {
   puts(
@@ -36,6 +36,7 @@ void usage() {
     "    volcano -c -g 255              # set the entire keyboard to green\n"
     "    volcano -C clear                      # clear the entire keyboard\n"
     "    volcano -C clear-m1    # clear the entire keyboard in custom mode\n"
+    "    volcano -M kmap.dat      # load a keymap from the file keymap.dat\n"
     "\n"
     "CODE REPOSITORY:"
   );
