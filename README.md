@@ -20,7 +20,7 @@ Implemented things:
 * clearing the whole keyboard
 * switching between color schemes
 * GUI in Tkinter
-* key mappings (hardcoded in `main.c` for now)
+* key mappings (hardcoded in `mkmap.c` for now)
 
 As for now, you must switch keyboard to the specific mode in order to use
 that mode's functions. In the future the driver will switch the modes
