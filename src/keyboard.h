@@ -114,6 +114,106 @@ struct kbd_key_t {
   uint32_t val;
 };
 
+struct kbd_keymap_t {
+  uint8_t a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w;
+  uint8_t x, y, z, k1, k2, k3, k4, k5, k6, k7, k8, k9, k0;
+  uint8_t enter, esc, backspace, tab, space, minus, plus, lbracket, rbracket;
+  uint8_t backslash, colon, ap, tilde, comma, dot, slash, caps;
+  uint8_t f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12;
+  uint8_t ps, sl, pb, ins, hm, pu, del, end, pd, right, left, down, up;
+  uint8_t lshift, rshift, lalt, ralt, lctrl, rctrl, meta, menu;
+};
+
+enum kbd_keymap_key_t {
+  KBD_KMAP_LSHIFT = 0x02,
+  KBD_KMAP_RSHIFT = 0x20,
+  KBD_KMAP_LALT = 0x04,
+  KBD_KMAP_RALT = 0x40,
+  KBD_KMAP_LCTRL = 0x01,
+  KBD_KMAP_RCTRL = 0x10,
+  KBD_KMAP_META = 0x08,
+  KBD_KMAP_MENU = 0x65,
+
+  KBD_KMAP_A = 0x04,
+  KBD_KMAP_B = 0x05,
+  KBD_KMAP_C = 0x06,
+  KBD_KMAP_D = 0x07,
+  KBD_KMAP_E = 0x08,
+  KBD_KMAP_F = 0x09,
+  KBD_KMAP_G = 0x0a,
+  KBD_KMAP_H = 0x0b,
+  KBD_KMAP_I = 0x0c,
+  KBD_KMAP_J = 0x0d,
+  KBD_KMAP_K = 0x0e,
+  KBD_KMAP_L = 0x0f,
+  KBD_KMAP_M = 0x10,
+  KBD_KMAP_N = 0x11,
+  KBD_KMAP_O = 0x12,
+  KBD_KMAP_P = 0x13,
+  KBD_KMAP_Q = 0x14,
+  KBD_KMAP_R = 0x15,
+  KBD_KMAP_S = 0x16,
+  KBD_KMAP_T = 0x17,
+  KBD_KMAP_U = 0x18,
+  KBD_KMAP_V = 0x19,
+  KBD_KMAP_W = 0x1a,
+  KBD_KMAP_X = 0x1b,
+  KBD_KMAP_Y = 0x1c,
+  KBD_KMAP_Z = 0x1d,
+  KBD_KMAP_1 = 0x1e,
+  KBD_KMAP_2 = 0x1f,
+  KBD_KMAP_3 = 0x20,
+  KBD_KMAP_4 = 0x21,
+  KBD_KMAP_5 = 0x22,
+  KBD_KMAP_6 = 0x23,
+  KBD_KMAP_7 = 0x24,
+  KBD_KMAP_8 = 0x25,
+  KBD_KMAP_9 = 0x26,
+  KBD_KMAP_0 = 0x27,
+  KBD_KMAP_ENTER = 0x28,
+  KBD_KMAP_ESC = 0x29,
+  KBD_KMAP_BACKSPACE = 0x2a,
+  KBD_KMAP_TAB = 0x2b,
+  KBD_KMAP_SPACE = 0x2c,
+  KBD_KMAP_MINUS = 0x2d,
+  KBD_KMAP_PLUS = 0x2e,
+  KBD_KMAP_LBRACKET = 0x2f,
+  KBD_KMAP_RBRACKET = 0x30,
+  KBD_KMAP_BACKSLASH = 0x31,
+  KBD_KMAP_COLON = 0x33,
+  KBD_KMAP_APOSTROPHE = 0x34,
+  KBD_KMAP_TILDE = 0x35,
+  KBD_KMAP_COMMA = 0x36,
+  KBD_KMAP_DOT = 0x37,
+  KBD_KMAP_SLASH = 0x38,
+  KBD_KMAP_CAPS = 0x39,
+  KBD_KMAP_F1 = 0x3a,
+  KBD_KMAP_F2 = 0x3b,
+  KBD_KMAP_F3 = 0x3c,
+  KBD_KMAP_F4 = 0x3d,
+  KBD_KMAP_F5 = 0x3e,
+  KBD_KMAP_F6 = 0x3f,
+  KBD_KMAP_F7 = 0x40,
+  KBD_KMAP_F8 = 0x41,
+  KBD_KMAP_F9 = 0x42,
+  KBD_KMAP_F10 = 0x43,
+  KBD_KMAP_F11 = 0x44,
+  KBD_KMAP_F12 = 0x45,
+  KBD_KMAP_PS = 0x46,
+  KBD_KMAP_SL = 0x47,
+  KBD_KMAP_PB = 0x48,
+  KBD_KMAP_INS = 0x49,
+  KBD_KMAP_HM = 0x4a,
+  KBD_KMAP_PU = 0x4b,
+  KBD_KMAP_DEL = 0x4c,
+  KBD_KMAP_END = 0x4d,
+  KBD_KMAP_PD = 0x4e,
+  KBD_KMAP_RIGHT= 0x4f,
+  KBD_KMAP_LEFT = 0x50,
+  KBD_KMAP_DOWN = 0x51,
+  KBD_KMAP_UP = 0x52,
+};
+
 enum kbd_mode_t {                    // Original name             Options
   KBD_MODE_NORMAL = 0x0d,            // Normally on               C/R
   KBD_MODE_CUSTOM = 0x1b,            // Custom settings           n/a
@@ -155,6 +255,7 @@ void kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b);
 void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
 void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode);
 void kbd_print_modes(void);
+void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *kmap);
 enum kbd_mode_t kbd_get_mode(const char *modestr);
 const struct kbd_key_t *kbd_get_key(const char *name);
 

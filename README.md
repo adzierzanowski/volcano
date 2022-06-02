@@ -20,6 +20,7 @@ Implemented things:
 * clearing the whole keyboard
 * switching between color schemes
 * GUI in Tkinter
+* key mappings (hardcoded in `main.c` for now)
 
 As for now, you must switch keyboard to the specific mode in order to use
 that mode's functions. In the future the driver will switch the modes
@@ -27,10 +28,9 @@ automatically.
 
 To implement (and to check if it's possible):
 
-* key mappings (this is certainly possible)
 * macros
-* defining custom schemes
-* update settings on PnP
+* defining custom color schemes
+* updating settings on PnP
 
 # Usage
 
@@ -39,6 +39,7 @@ The arguments to the main program are filenames with binary packets.
 ```
 OPTIONS:
     -m         select mode ('list' to list all modes)
+    -M         remap keys
     -c         set color for entire keyboard
     -C         pass a command
     -h         show this help message and exit
