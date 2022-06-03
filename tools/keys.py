@@ -1,6 +1,3 @@
-from re import M
-
-
 KEYS = {
   'ESC': {
     'pos': (0, 0)

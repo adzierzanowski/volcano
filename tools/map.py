@@ -1,10 +1,10 @@
 import sys
 import os
 
-maps = os.listdir('map')
+maps = os.listdir('sharemap')
 
 for fname in maps:
-  with open(f'map/{fname}') as f:
+  with open(f'sharemap/{fname}') as f:
     data = [l for l in f.read().split('\n') if l!='']
     out = ''
 
@@ -13,5 +13,5 @@ for fname in maps:
       if sline[1].startswith('Out'):
         out += line.split('\t')[-3] + '\n'
 
-  with open(f'map2/{fname.replace(".txt", "")}', 'w') as f:
+  with open(f'map/{fname.replace(".txt", "")}', 'w') as f:
     f.write(out)

@@ -20,7 +20,7 @@ Implemented things:
 * clearing the whole keyboard
 * switching between color schemes
 * GUI in Tkinter
-* key mappings (hardcoded in `mkmap.c` for now)
+* key mappings
 
 As for now, you must switch keyboard to the specific mode in order to use
 that mode's functions. In the future the driver will switch the modes
@@ -31,6 +31,31 @@ To implement (and to check if it's possible):
 * macros
 * defining custom color schemes
 * updating settings on PnP
+
+# Building
+
+Install `libusb` 1.0. For example on macOS:
+
+```
+$ brew install libusb
+```
+
+If you've installed `libusb` in another way, you might need to modify the
+`Makefile` to link against this library.
+
+
+Finally run `make`:
+
+```
+$ make
+```
+
+If you wish to use included tools, you'll need `python3` and install the
+requirements:
+
+```
+$ python3 -m pip install -r requirements.txt
+```
 
 # Usage
 
@@ -59,7 +84,17 @@ EXAMPLES:
     volcano -C clear-m1    # clear the entire keyboard in custom mode
 ```
 
-## Packets
+## Key mapping
+
+Create keymapping in yml file and convert it to binary file. Then load it
+using `volcano`.
+
+```
+$ python3 tools/mkmap.py sample-keymap.yml kmap.dat
+$ sudo volcano -M kmap.dat
+```
+
+# Packets
 
 If you compile `packets_cli.c`  instead of `main.c` you'll get an executable which
 takes filenames as arguments. Each file is a packet file.
@@ -91,6 +126,15 @@ or
 kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
 ```
 
+# Other files
+
+The repository contains `pck` folder which contains the packets sniffed during
+the development. It's not needed for the driver to run properly. Some dev tools
+in `tools` folder use it, though.
+
+`map` folder contains packets which represents key mapping. These are in
+plain ASCII hexadecimal format.
+
 # Contributing
 
 Please make a pull request if you've managed to get a grip of the commands.
@@ -99,3 +143,4 @@ I'll be grateful.
 # Dependecies
 
 * libusb 1.0
+* pyyaml
