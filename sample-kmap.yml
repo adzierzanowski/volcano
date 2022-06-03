@@ -1,3 +1,22 @@
+# Key names:
+# A .. Z                                   -- Alpha keys
+# K0 .. K9                                 -- Number keys
+# F1 .. F2                                 -- Function keys
+# META                                     -- Win/Cmd key
+# MENU                                     -- Context menu key
+# LALT, RALT, LSHIFT, RSHIFT, LCTRL, RCTRL -- Modal keys
+# ENTER, ESC, BACKSPACE, TAB, SPACE        -- Self-explanatory
+# LBRACKET, RBRACKET                       -- [ and ]
+# BACKSLASH, SLASH
+# MINUS, PLUS                              -- -/_ and +/=
+# COLON                                    -- ;/:
+# AP                                       -- '/"
+# TILDE                                    -- `/~
+# COMMA, DOT
+# CAPS                                     -- CapsLock
+# PS, SL, PB, INS, HM, PU, DEL, END, PD    -- Function keys in the right block
+# UP, LEFT, RIGHT, DOWN                    -- Arrows
+
 RALT: META
 MENU: RALT
 ESC: CAPS
