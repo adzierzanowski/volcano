@@ -25,12 +25,16 @@ modal_keys = ('LSHIFT', 'RSHIFT', 'LALT', 'RALT', 'LCTRL', 'RCTRL', 'META')
 data = b''
 for key in keys:
   if key in usermap:
-    data += KEYCODES[usermap[key]].to_bytes(1, 'little')
+    if usermap[key] in KEYCODES:
+      data += KEYCODES[usermap[key]].to_bytes(1, 'little')
+    else:
+      data += usermap[key].to_bytes(1, 'little')
   else:
     data += KEYCODES[key].to_bytes(1, 'little')
 
 for key in keys:
   k = None
+
   if key in usermap:
     k = usermap[key]
   else:
