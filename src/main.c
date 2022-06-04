@@ -6,7 +6,7 @@
 
 #include "keyboard.h"
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.1"
 
 void usage() {
   puts(
@@ -143,12 +143,16 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  //bool status;
   libusb_context *ctx = NULL;
   libusb_device_handle *kbdh = NULL;
 
+  if (mode && strcmp(mode, "list") == 0) {
+    kbd_print_modes();
+    return 0;
+  }
+
   if (!kbd_open(&ctx, &kbdh)) {
-    exit(1);
+    return 1;
   }
 
 #ifdef DEBUG
@@ -163,7 +167,6 @@ int main(int argc, char *argv[]) {
       for (int i = 0; i < keys_sz; i++) {
         kbd_set_key_color(kbdh, keys[i].val, 0);
       }
-
     } else if (strcmp(command, "clear") == 0) {
       kbd_set_color(kbdh, 0, 0, 0);
     } else {
@@ -182,12 +185,7 @@ int main(int argc, char *argv[]) {
       printerr("Key %s not found\n", keyname);
     }
   } else if (mode) {
-    if (strcmp(mode, "list") == 0) {
-      kbd_print_modes();
-
-    } else {
-      kbd_set_mode(kbdh, kbd_get_mode(mode));
-    }
+    kbd_set_mode(kbdh, kbd_get_mode(mode));
 
   } else if (rainbow_passed) {
     kbd_set_rainbow(kbdh, rainbow);

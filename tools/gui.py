@@ -5,6 +5,31 @@ import subprocess
 
 VOLCANO_EXE = './volcano'
 
+COLOR_SCHEMES = {
+  'Normal': 'norm',
+  'Custom': 'custom',
+  'Stream': 'stream',
+  'Clouds': 'clouds',
+  'Swirl': 'swirl',
+  'Rainbow Breathing': 'rgb-breath',
+  'Breathing': 'breath',
+  'Hotmap': 'hotmap',
+  'Ripple': 'ripple',
+  'Ripple lines': 'ripple-lines',
+  'Snow': 'snow',
+  'Rainbow Dots': 'rgb-dots',
+  'Rainbow Lines': 'rgb-lines',
+  'Triangular Waves': 'triangular',
+  'Drain': 'drain',
+  'Matrix': 'matrix',
+  'Scanline': 'scanline',
+  'Gradient': 'gradient',
+  'Rainbow Circles': 'rgb-circles'
+}
+
+COLOR_SCHEME_KEYS = tuple(COLOR_SCHEMES.keys())
+
+
 class GUI:
   def __init__(self, root):
     self.root = root
@@ -47,6 +72,16 @@ class GUI:
 
     self.set_color_btn = tk.Button(text='Set Color', command=self.set_color)
     self.set_color_btn.place(x=135, y=480)
+
+    self.modes_var = tk.StringVar(value=COLOR_SCHEME_KEYS)
+    self.color_mode_listbox = tk.Listbox(root, listvariable=self.modes_var)
+    self.color_mode_listbox.place(x=465, y=500)
+    self.color_mode_listbox.bind('<<ListboxSelect>>', self.on_listbox_select)
+
+  def on_listbox_select(self, e):
+    sel = self.color_mode_listbox.curselection()
+    mode = COLOR_SCHEMES.get(COLOR_SCHEME_KEYS[sel[0]])
+    subprocess.run(('sudo', VOLCANO_EXE, '-m', mode))
 
   def set_color(self):
     subprocess.run((

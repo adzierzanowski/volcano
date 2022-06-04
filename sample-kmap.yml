@@ -20,3 +20,4 @@
 RALT: META
 MENU: RALT
 ESC: CAPS
+PB: 0x58 # Keypad Enter

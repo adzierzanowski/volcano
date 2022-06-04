@@ -322,25 +322,25 @@ enum kbd_mode_t kbd_get_mode(const char *modestr) {
 
 void kbd_print_modes(void) {
   puts("    NAME            Opts   ORIGINAL NAME");
-  puts("    norm         -- -CR- -- Normally on");
-  puts("    custom       --      -- Custom settings");
-  puts("    stream       -- SCRD -- Go with the stream");
-  puts("    clouds       -- SCRD -- Clouds fly");
-  puts("    swirl        -- SCRD -- Winding paths");
-  puts("    rgb-breath   -- S--- -- The trial of light");
-  puts("    breath       -- SCR- -- Breathing");
-  puts("    hotmap       -- SCR- -- Pass without trace");
-  puts("    ripple       -- SCR- -- Ripple graff");
-  puts("    ripple-lines -- SCR- -- Fast run without trace");
-  puts("    snow         -- S--- -- Snow winter jasmine");
-  puts("    rgb-dots     -- S--- -- Flowers blooming");
-  puts("    rgb-lines    -- S--D -- Swift action");
-  puts("    triangular   -- SCR- -- Hurricane");
-  puts("    drain        -- SCR- -- Accumulate");
-  puts("    matrix       -- SCR- -- Digital times");
-  puts("    scanline     -- -CR- -- Both ways");
-  puts("    gradient     -- ---- -- Surmount");
-  puts("    rgb-circle   -- ---D -- Fast and the Furious");
+  puts("    norm            -CR-    Normally on");
+  puts("    custom                  Custom settings");
+  puts("    stream          SCRD    Go with the stream");
+  puts("    clouds          SCRD    Clouds fly");
+  puts("    swirl           SCRD    Winding paths");
+  puts("    rgb-breath      S---    The trial of light");
+  puts("    breath          SCR-    Breathing");
+  puts("    hotmap          SCR-    Pass without trace");
+  puts("    ripple          SCR-    Ripple graff");
+  puts("    ripple-lines    SCR-    Fast run without trace");
+  puts("    snow            S---    Snow winter jasmine");
+  puts("    rgb-dots        S---    Flowers blooming");
+  puts("    rgb-lines       S--D    Swift action");
+  puts("    triangular      SCR-    Hurricane");
+  puts("    drain           SCR-    Accumulate");
+  puts("    matrix          SCR-    Digital times");
+  puts("    scanline        -CR-    Both ways");
+  puts("    gradient        ----    Surmount");
+  puts("    rgb-circle      ---D    Fast and the Furious");
 }
 
 void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode) {
