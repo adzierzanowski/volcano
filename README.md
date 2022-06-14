@@ -5,32 +5,6 @@ the only available drivers are made for Windows.
 
 I'm not really sure but it should also work on Linux.
 
-# Development status
-
-The communication with the keyboard works just fine but there are many commands
-left to decipher.
-
-To sniff USB communication with the original driver I use [Device Monitoring
-Studio](https://www.hhdsoftware.com/device-monitoring-studio).
-
-Implemented things:
-
-* setting single keys to a specified color in "Custom" mode
-* setting the whole keyboard color in supported modes
-* clearing the whole keyboard
-* switching between color schemes
-* GUI in Tkinter
-* key mappings
-
-As for now, you must switch keyboard to the specific mode in order to use
-that mode's functions. In the future the driver will switch the modes
-automatically.
-
-To implement (and to check if it's possible):
-
-* macros
-* defining custom color schemes
-* updating settings on PnP
 
 # Building
 
@@ -57,7 +31,95 @@ requirements:
 $ python3 -m pip install -r requirements.txt
 ```
 
-# Usage
+
+# Creating keymaps
+
+Create keymapping in a YAML file and convert it to binary file. Then load it
+using `volcano` or `volcanod` (see *Daemon* section).
+
+```
+$ python3 tools/mkmap.py sample-keymap.yml kmap.dat
+$ sudo volcano -M kmap.dat
+```
+
+# Daemon
+
+To make the driver's work seamless it's best to use the daemon which listens
+for commands in background and reacts to hotplugging of the keyboard.
+
+## Installation (macOS)
+
+First, create `.volcanorc` file with basic configuration:
+
+```conf
+SOCKET_FILE=/Users/user/.volcano.sock
+KMAP_FILE=/Users/user/kmap.dat
+INIT_MODE=ripple
+INIT_COLOR=00ffff
+LOGLEVEL=1
+```
+
+| Key           | Description                                                  |
+|---------------|--------------------------------------------------------------|
+| `SOCKET_FILE` | Socket file path for inter-process communication             |
+| `KMAP_FILE`   | Keymap file loaded on keyboard hotplug                       |
+| `INIT_MODE`   | Initial color scheme after plugging                          |
+| `INIT_COLOR`  | Initial color                                                |
+| `LOGLEVEL`    | Logging verbosity (`0`=ERROR, `1`=WARN, `2`=INFO, `3`=DEBUG) |
+
+Next, create `volcanod.plist` file in `/Library/LaunchDaemons` folder:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>volcanod</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string><!--PATH TO VOLCANOD EXECUTABLE--></string>
+    <string><!--PATH TO .VOLCANORC FILE--></string>
+  </array>
+  <key>KeepAlive</key>
+  <true />
+  <key>StandardOutPath</key>
+  <string>/var/log/volcanod.log</string>
+  <key>StandardErrorPath</key>
+  <string>/var/log/volcanod.log</string>
+  <key>Debug</key>
+  <true />
+  <key>RunAtLoad</key>
+  <true />
+</dict>
+</plist>
+```
+
+To enable the daemon
+
+```bash
+$ sudo launchctl load /Library/LaunchDaemons/volcanod.plist
+```
+
+To disable
+
+```bash
+$ sudo launchctl unload /Library/LaunchDaemons/volcanod.plist
+```
+
+## Socket Commands
+
+| Command                  | Description         |
+|--------------------------|---------------------|
+| `kmap [FILE]`            | map keys            |
+| `mode MODE`              | set color mode      |
+| `color [R [G [B]]]`      | set color           |
+| `kcolor KEY [R [G [B]]]` | set color           |
+| `speed LEVEL`            | animation speed     |
+| `brightness LEVEL`       | brightness level    |
+| `dir DIR`                | animation direction |
+
+# Main executable usage
 
 ```
 OPTIONS:
@@ -84,17 +146,39 @@ EXAMPLES:
     volcano -C clear-m1    # clear the entire keyboard in custom mode
 ```
 
-## Key mapping
 
-Create keymapping in yml file and convert it to binary file. Then load it
-using `volcano`.
+# Development
 
-```
-$ python3 tools/mkmap.py sample-keymap.yml kmap.dat
-$ sudo volcano -M kmap.dat
-```
+## Dependecies
 
-# Packets
+* libusb 1.0
+* pyyaml
+
+## Development status
+
+It's almost complete.
+
+Some refactoring is certainly needed.
+
+To sniff USB communication with the original driver I use [Device Monitoring
+Studio](https://www.hhdsoftware.com/device-monitoring-studio).
+
+Implemented things:
+
+* setting single keys to a specified color in "Custom" mode
+* setting the whole keyboard color in supported modes
+* clearing the whole keyboard
+* switching between color schemes
+* GUI in Tkinter
+* key mappings
+* updating settings on PnP
+
+To implement (and to check if it's possible):
+
+* macros
+* defining custom color schemes
+
+## Packets
 
 If you compile `packets_cli.c` (`make packets`) you'll get an executable which
 takes filenames as arguments. Each file is a packet file.
@@ -126,7 +210,7 @@ or
 kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
 ```
 
-# Other files
+## Other files
 
 The repository contains `pck` folder which contains the packets sniffed during
 the development. It's not needed for the driver to run properly. Some dev tools
@@ -135,12 +219,7 @@ in `tools` folder use it, though.
 `map` folder contains packets which represents key mapping. These are in
 plain ASCII hexadecimal format.
 
-# Contributing
+## Contributing
 
 Please make a pull request if you've managed to get a grip of the commands.
 I'll be grateful.
-
-# Dependecies
-
-* libusb 1.0
-* pyyaml

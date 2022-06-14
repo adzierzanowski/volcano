@@ -317,7 +317,7 @@ enum kbd_mode_t kbd_get_mode(const char *modestr) {
     return KBD_MODE_RAINBOW_CIRCLES;
   }
 
-  return KBD_MODE_NORMAL;
+  return KBD_MODE_UNKNOWN;
 }
 
 void kbd_print_modes(void) {
@@ -491,7 +491,7 @@ void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *k) {
 
 void kbd_read_keymap_file(const char *fname, struct kbd_keymap_t *kmap) {
   FILE *f = fopen(fname, "rb");
-
+  fread(kmap, sizeof (struct kbd_keymap_t), 1, f);
   fclose(f);
 }
 

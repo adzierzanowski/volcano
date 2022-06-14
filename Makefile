@@ -9,9 +9,8 @@ else
 	CFLAGS += -O3
 endif
 
-FNAMES = main keyboard fmt
-HFNAMES = keyboard fmt
-HEADERS = $(addsuffix .h, $(addprefix src/, $(HFNAMES)))
+FNAMES = keyboard fmt
+HEADERS = $(addsuffix .h, $(addprefix src/, $(FNAMES)))
 SOURCES = $(addsuffix .c, $(addprefix src/, $(FNAMES)))
 
 PNAMES = packets_cli keyboard fmt
@@ -19,10 +18,14 @@ PHEADERS = $(addsuffix .h, $(addprefix src/, $(HFNAMES)))
 PSOURCES = $(addsuffix .c, $(addprefix src/, $(PNAMES)))
 
 all: $(SOURCES) $(HEADERS)
-	$(CC) $(CFLAGS) $(SOURCES) -o volcano
+	$(CC) $(CFLAGS) $(SOURCES) src/main.c -o volcano
+	$(CC) $(CFLAGS) $(SOURCES) src/daemon.c -o volcanod
 
 packets: $(PHEADERS) $(PSOURCES)
 	$(CC) $(CFLAGS) $(PSOURCES) -o packets
 
 info: src/info.c
 	$(CC) $(CFLAGS) src/info.c -o info
+
+test: test/hotplug.c
+	$(CC) $(CFLAGS) test/hotplug.c -o hotplug

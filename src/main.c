@@ -6,7 +6,7 @@
 
 #include "keyboard.h"
 
-#define VERSION "0.1.1"
+#define VERSION "0.9.0"
 
 void usage() {
   puts(

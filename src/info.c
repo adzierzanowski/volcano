@@ -54,6 +54,8 @@ int main(int argc, char *argv[]) {
 
   libusb_close(kbdh);
 
+  printf("Does libusb have hotplug? %d\n", libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG));
+
   libusb_exit(ctx);
 
   return 0;

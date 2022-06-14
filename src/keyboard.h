@@ -256,6 +256,8 @@ enum kbd_mode_t {                    // Original name             Options
   KBD_MODE_SCANLINE = 0x17,          // Both ways                 C/R
   KBD_MODE_GRADIENT = 0x18,          // Surmount                  Predefined gradient
   KBD_MODE_RAINBOW_CIRCLES = 0x19,   // Fast and the Furious      Inward/Outward
+
+  KBD_MODE_UNKNOWN = 0xff
 };
 
 enum kbd_dir_t {
@@ -268,6 +270,7 @@ const size_t keys_sz;
 
 bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh);
 bool kbd_close(libusb_context *ctx, libusb_device_handle *kbdh);
+
 bool kbd_send(libusb_device_handle *kbdh, uint8_t msg[64]);
 bool kbd_recv(
   libusb_device_handle *kbdh, size_t sz, uint8_t *buf, unsigned int timeout);
@@ -276,6 +279,8 @@ bool kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...);
 
 bool kbd_send_start(libusb_device_handle *kbdh);
 bool kbd_send_end(libusb_device_handle *kbdh);
+
+void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *kmap);
 void kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color);
 void kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b);
 void kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level);
@@ -284,9 +289,9 @@ void kbd_set_report_rate(libusb_device_handle *kbdh, enum kbd_rate_t rate);
 void kbd_set_direction(libusb_device_handle *kbdh, enum kbd_dir_t dir);
 void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
 void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode);
+
 void kbd_print_modes(void);
 void kbd_read_keymap_file(const char *fname, struct kbd_keymap_t *kmap);
-void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *kmap);
 enum kbd_mode_t kbd_get_mode(const char *modestr);
 const struct kbd_key_t *kbd_get_key(const char *name);
 
