@@ -3,15 +3,17 @@
 This is an attempt to modify keyboard state (colors, macros) using macOS because
 the only available drivers are made for Windows.
 
-I'm not really sure but it should also work on Linux.
+The driver also works on Linux (tested on Kubuntu 20.04).
 
 ![](https://i.imgur.com/cwjAgDg.png)
 
 # Building
 
-Install `libusb` 1.0. For example on macOS:
+## macOS
 
-```
+Install `libusb` 1.0. For example:
+
+```bash
 $ brew install libusb
 ```
 
@@ -21,14 +23,30 @@ If you've installed `libusb` in another way, you might need to modify the
 
 Finally run `make`:
 
-```
+```bash
 $ make
 ```
+
+## Ubuntu
+
+Install `libusb` 1.0.
+
+```bash
+$ sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
+```
+
+Run `make`:
+
+```bash
+$ make
+```
+
+## Tools
 
 If you wish to use included tools, you'll need `python3` and install the
 requirements:
 
-```
+```bash
 $ python3 -m pip install -r requirements.txt
 ```
 
@@ -41,7 +59,7 @@ daemon.
 Another way to Create keymapping is to convert a YAML file to binary file and
 then load it using `volcano` or `volcanod` (see *Daemon* section).
 
-```
+```bash
 $ python3 tools/mkmap.py sample-keymap.yml kmap.dat
 $ sudo volcano -M kmap.dat
 ```
@@ -51,7 +69,7 @@ $ sudo volcano -M kmap.dat
 To make the driver's work seamless it's best to use the daemon which listens
 for commands in background and reacts to hotplugging of the keyboard.
 
-## Installation (macOS)
+## Installation
 
 Clone the repository and build it:
 
@@ -66,6 +84,8 @@ Create `.volcanorc` file with basic configuration:
 
 ```conf
 SOCKET_FILE=/Users/user/.volcano.sock
+SOCKET_UID=501
+SOCKET_GID=20
 KMAP_FILE=/Users/user/kmap.dat
 INIT_MODE=ripple
 INIT_COLOR=00ffff
@@ -79,6 +99,8 @@ SRV_EXE=/Users/user/volcano/bin/volcanosrv
 | Key           | Description                                                  |
 |---------------|--------------------------------------------------------------|
 | `SOCKET_FILE` | Socket file path for inter-process communication             |
+| `SOCKET_UID`  | Socket owner user ID (should be you)                         |
+| `SOCKET_GID`  | Socket owner group ID                                        |
 | `KMAP_FILE`   | Keymap file loaded on keyboard hotplug                       |
 | `INIT_MODE`   | Initial color scheme after plugging                          |
 | `INIT_COLOR`  | Initial color                                                |
@@ -86,6 +108,8 @@ SRV_EXE=/Users/user/volcano/bin/volcanosrv
 | `SRV_ENABLE`  | Enable locally hosted www control panel                      |
 | `SRV_PORT`    | Port at which the control panel is server                    |
 | `SRV_DATA`    | Path to the control panel assets                             |
+
+### macOS launchctl
 
 Next, create `volcanod.plist` file in `/Library/LaunchDaemons` folder:
 
@@ -126,6 +150,10 @@ To disable
 ```bash
 $ sudo launchctl unload /Library/LaunchDaemons/volcanod.plist
 ```
+
+### Linux
+
+Well, you'll have to find out how to install daemons yourself.
 
 ## Socket Commands
 

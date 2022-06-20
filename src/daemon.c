@@ -200,10 +200,9 @@ int create_socket() {
     exit(1);
   }
 
-  // TODO: configurable user and group
   dlog(LOG_INFO, "Setting permissions to the socket file.\n");
   chmod(config.socket_file, S_IRWXG | S_IRWXO | S_IRWXU);
-  chown(config.socket_file, 501, 20);
+  chown(config.socket_file, config.socket_uid, config.socket_gid);
 
   if (listen(s, 5) == -1) {
     dlog(LOG_ERROR, "Failed to listen.\n");
@@ -256,6 +255,12 @@ void init_config(const char *rcfname) {
     if (strcmp(key, "SOCKET_FILE") == 0) {
       config.socket_file = calloc(strlen(tok) + 1, sizeof (char));
       sprintf(config.socket_file, "%s", tok);
+
+    } else if (strcmp(key, "SOCKET_UID") == 0) {
+      config.socket_uid = atoi(tok);
+
+    } else if (strcmp(key, "SOCKET_GID") == 0) {
+      config.socket_gid = atoi(tok);
 
     } else if (strcmp(key, "KMAP_FILE") == 0) {
       config.kmap_file = calloc(strlen(tok) + 1, sizeof (char));

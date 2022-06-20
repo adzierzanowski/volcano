@@ -5,7 +5,7 @@ CFLAGS += -Wno-unused-command-line-argument \
 -I/usr/local/opt/libusb/include/libusb-1.0 \
 -L/usr/local/opt/libusb/lib/
 else
-CFLAGS += -I/usr/include/libusb-1.0
+CFLAGS += -I/usr/include/libusb-1.0 -Wno-unused-result
 endif
 
 ifdef DEBUG

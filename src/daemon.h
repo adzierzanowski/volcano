@@ -28,6 +28,8 @@ struct config_t {
   char *init_mode;
   char *srv_data;
   char *srv_exe;
+  int socket_uid;
+  int socket_gid;
   uint32_t init_color;
   uint16_t srv_port;
   bool srv_enable;
