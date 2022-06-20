@@ -1,4 +1,4 @@
-# Modecom Volcano LAN party macOS "driver"
+# Modecom Volcano LAN party UNIX userland driver
 
 This is an attempt to modify keyboard state (colors, macros) using macOS because
 the only available drivers are made for Windows.
