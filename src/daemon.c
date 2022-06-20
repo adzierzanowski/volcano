@@ -120,8 +120,7 @@ int daemon_main(int argc, const char *argv[]) {
     kbdh = libusb_open_device_with_vid_pid(ctx, KBD_VID, KBD_PID);
     dlog(LOG_INFO, "Initial keyboard connection: %p\n", kbdh);
     if (!kbdh) {
-      dlog(LOG_ERROR, "Failed to connect to the keyboard.\n");
-      exit(1);
+      dlog(LOG_WARNING, "Failed to connect to the keyboard.\n");
     }
   }
 

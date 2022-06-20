@@ -12,8 +12,8 @@
 
 #include <libusb.h>
 
+#define BUFSZ 20240
 #define SMALLBUFSZ 1024
-#define BUFSZ 10240
 
 enum loglevel_t {
   LOG_ERROR = 0,

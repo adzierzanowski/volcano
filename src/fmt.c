@@ -34,6 +34,7 @@ static const char *loglevelstr(enum loglevel_t level) {
     case LOG_INFO:    return "INFO ";
     case LOG_DEBUG:   return "DEBUG";
   }
+  return "NONE ";
 }
 
 void dlog(enum loglevel_t level, const char *fmt, ...) {

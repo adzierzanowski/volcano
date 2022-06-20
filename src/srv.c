@@ -6,7 +6,7 @@ static uint16_t srv_port;
 static const char *srv_socket;
 
 
-static void on_exit() {
+static void srv_on_exit() {
   dlog(LOG_INFO, "Quitting volcano server.\n");
 }
 
@@ -33,7 +33,7 @@ int main(int argc, const char *argv[]) {
   dlog(LOG_INFO, "Starting volcano server at 0.0.0.0:%hu.\n", srv_port);
   dlog(LOG_DEBUG, "Server assets path: %s\n", srv_data);
   signal(SIGINT, sigint_handler);
-  atexit(on_exit);
+  atexit(srv_on_exit);
 
   int s = socket(AF_INET, SOCK_STREAM, 0);
   int one = 1;
@@ -187,8 +187,10 @@ char *handle_request_get(char *path) {
     if (f == NULL) {
       return http_make_response(404, "text/plain", (uint8_t *) http_status_str(404));
     }
-    char fbuf[BUFSZ] = {0};
-    fread(fbuf, sizeof (uint8_t), BUFSZ, f);
+    // Subtracting some bytes to silence GCC warning about sprintfing
+    // potentially larger buffer than dst size
+    char fbuf[BUFSZ-256] = {0};
+    fread(fbuf, sizeof (uint8_t), BUFSZ-256, f);
     fclose(f);
 
     // TODO: fix favicon response
@@ -330,7 +332,7 @@ char *dispatch_cmd(char **spath, size_t spathsz, char *body) {
     int msgptr = 0;
 
     for (int i = 0; i < strlen(body); i++) {
-      if (isnumber(body[i])) {
+      if (isdigit(body[i])) {
         msg[msgptr++] = body[i];
       } else if (body[i] == ',') {
         msg[msgptr++] = ' ';
