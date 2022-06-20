@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Volcano kmap creator</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="/main.css">
+    <style>
+      #keyboards {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+      }
+
+      .keyboard-wrapper {
+        margin: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+
+      }
+
+      .keyboard button.remapped {
+        border: 2px solid black;
+      }
+
+      #kmap-nav {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="content">
+      <nav id="kmap-nav">
+        <h1>Volcano keymap creator</h1>
+        <button id="btn-save">Save</button>
+        <button id="btn-upload">Upload</button>
+      </nav>
+      <div id="keyboards">
+        <div class="keyboard-wrapper">
+          <div class="keyboard" id="keyboard"></div>
+        </div>
+        <div class="keyboard-wrapper">
+          <div class="keyboard" id="keyboard-remapped"></div>
+        </div>
+      </div>
+    </div>
+
+  </body>
+  <script src="/volcano.js"></script>
+  <script src="/kmap.js"></script>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Volcano</title>
+    <link rel="stylesheet" type="text/css" href="/main.css">
+    <meta charset="utf-8">
+  </head>
+
+  <body>
+    <div id="content">
+      <header>
+        <h1>Volcano driver frontend</h1>
+        <div id="status"></div>
+      </header>
+      <div id="controls">
+        <section id="modes-section"">
+          <h2>Color Modes</h2>
+          <div id="modes"></div>
+        </section>
+
+        <section>
+          <h2>Color</h2>
+          <div id="color-inputs">
+            <div>
+              # <input
+                  class="color-input"
+                  id="color-input__hex"
+                  type="text"
+                  pattern="[a-zA-Z0-9]{6}"
+                  placeholder="HEX">
+            </div>
+            <div id="rgb-input">
+              <input
+                class="color-input"
+                id="color-input__red"
+                value="0"
+                type="number"
+                min="0"
+                max="255"
+                placeholder="Red"
+                style="border-color: red;">
+              <input
+                class="color-input"
+                id="color-input__green"
+                value="0"
+                type="number"
+                min="0"
+                max="255"
+                placeholder="Green"
+                style="border-color: green;">
+              <input
+                class="color-input"
+                id="color-input__blue"
+                value="0"
+                type="number"
+                min="0"
+                max="255"
+                placeholder="Blue"
+                style="border-color: blue;">
+            </div>
+            <div id="color-palette"></div>
+            <div id="color-inputs__nav">
+              <div id="color-preview"></div>
+              <button id="btn-color">Set color</button>
+            </div>
+          </div>
+        </section>
+        <section id="misc-section">
+          <h2>Misc</h2>
+          <div id="misc-controls">
+            <div class="control">
+              <input type="checkbox" id="rainbow">
+              <label for="rainbow">Rainbow <span id="rainbow-value">Off</span></label>
+            </div>
+            <div class="control">
+              <input type="range" min="0" max="4" id="speed" value="4">
+              <label for="speed">Speed <span id="speed-value">0</span></label>
+            </div>
+            <div class="control">
+              <input type="range" min="0" max="4" id="brightness" value="4">
+              <label for="brightness">Brightness <span id="brightness-value">0</span></label>
+            </div>
+            <div class="control">
+              <input type="range" min="0" max="1" id="direction" value="0" disabled>
+              <label for="direction">Direction <span id="direction-value">0</span></label>
+            </div>
+            <div class="control">
+              <input type="range" min="0" max="3" id="reprate" value="3">
+              <label for="brightness">Report rate <span id="reprate-value">0</span> Hz</label>
+            </div>
+            <button id="misc-apply">Apply</button>
+          </div>
+        </section>
+        <section id="keyboard-section">
+          <div id="keyboard-header">
+            <h2>Keys</h2>
+            <!--form id="keyboard-mode">
+              <input type="radio" id="keyboard-color" name="keyboard-mode" value="color" checked>
+              <label for="keyboard-color">Color</label>
+              <input type="radio" id="keyboard-mapping" value="mapping" name="keyboard-mode">
+              <label for="keyboard-mapping">Map</label>
+            </form-->
+            <a href="/kmap">Create Mapping</a>
+          </div>
+          <div class="keyboard" id="keyboard"></div>
+        </section>
+      </div>
+
+      <footer>
+        &copy; 2022 A. Dzierzanowski
+        <a href="https://github.com/adzierzanowski/volcano">GitHub</a>
+      </footer>
+    </div>
+
+    <script src="/volcano.js"></script>
+    <script src="/index.js"></script>
+  </body>
+</html>

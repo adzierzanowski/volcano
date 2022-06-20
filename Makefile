@@ -1,4 +1,5 @@
 CFLAGS = -Wall -Wpedantic \
+-Wno-unused-command-line-argument \
 -I/usr/local/opt/libusb/include/libusb-1.0 \
 -L/usr/local/opt/libusb/lib/ \
 -lusb-1.0
@@ -9,23 +10,37 @@ else
 	CFLAGS += -O3
 endif
 
-FNAMES = keyboard fmt
-HEADERS = $(addsuffix .h, $(addprefix src/, $(FNAMES)))
-SOURCES = $(addsuffix .c, $(addprefix src/, $(FNAMES)))
+BUILD = build
+BIN = bin
 
-PNAMES = packets_cli keyboard fmt
-PHEADERS = $(addsuffix .h, $(addprefix src/, $(HFNAMES)))
-PSOURCES = $(addsuffix .c, $(addprefix src/, $(PNAMES)))
+.PHONY: all
+all: volcanod volcano volcanosrv volcano-info
 
-all: $(SOURCES) $(HEADERS)
-	$(CC) $(CFLAGS) $(SOURCES) src/main.c -o volcano
-	$(CC) $(CFLAGS) $(SOURCES) src/daemon.c -o volcanod
+volcanod: $(addprefix $(BUILD)/, fmt.o daemon.o keyboard.o)
+	@-mkdir -p $(BIN)
+	$(CC) $(CFLAGS) $^ -o $(BIN)/$@
 
-packets: $(PHEADERS) $(PSOURCES)
-	$(CC) $(CFLAGS) $(PSOURCES) -o packets
+volcanosrv: $(addprefix $(BUILD)/, fmt.o srv.o keyboard.o)
+	@-mkdir -p $(BIN)
+	$(CC) $(CFLAGS) $^ -o $(BIN)/$@
 
-info: src/info.c
-	$(CC) $(CFLAGS) src/info.c -o info
+volcano: $(addprefix $(BUILD)/, fmt.o main.o keyboard.o)
+	@-mkdir -p $(BIN)
+	$(CC) $(CFLAGS) $^ -o $(BIN)/$@
 
-test: test/hotplug.c
-	$(CC) $(CFLAGS) test/hotplug.c -o hotplug
+volcano-info: $(addprefix $(BUILD)/, info.o)
+	@-mkdir -p $(BIN)
+	$(CC) $(CFLAGS) $^ -o $(BIN)/$@
+
+$(BUILD):
+	@-mkdir -p $@
+
+$(BIN):
+	@-mkdir -p $@
+
+clean:
+	-rm -rf $(BUILD)
+	-rm -rf $(BIN)
+
+$(BUILD)/%.o: src/%.c $(BUILD)
+	$(CC) -c $(CFLAGS) $< -o $@

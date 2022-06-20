@@ -6,7 +6,7 @@
 
 #include "keyboard.h"
 
-#define VERSION "0.9.0"
+#include "version.h"
 
 void usage() {
   puts(
@@ -51,7 +51,7 @@ void usage() {
 }
 
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char *argv[]) {
   char opt;
   const char *keyname = NULL;
   const char *command = NULL;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   bool reprate_passed = false;
 
 
-  while ((opt = getopt(argc, argv, "b:B:cC:D:g:hH:k:m:M:r:R:S:")) != -1) {
+  while ((opt = getopt(argc, (char * const *) argv, "b:B:cC:D:g:hH:k:m:M:r:R:S:")) != -1) {
     switch (opt) {
       case 'B':
         brightness_passed = true;

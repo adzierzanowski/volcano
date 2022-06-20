@@ -37,7 +37,7 @@
 #define KEY_8 0x6b5700
 #define KEY_9 0x6e5a00
 #define KEY_0 0x715d00
-#define KEY_MINUS 0x048200
+#define KEY_MINUS 0x048200 // TODO: check if correct
 #define KEY_PLUS 0x776300
 #define KEY_BACKSPACE 0x7a6600
 #define KEY_INS 0x7d6900
@@ -58,7 +58,7 @@
 #define KEY_LBRACKET 0xb39f00
 #define KEY_RBRACKET 0xb6a200
 #define KEY_BACKSLASH 0xb9a500
-#define KEY_DEL 0x04ca00
+#define KEY_DEL 0x04ca00 // TODO: check if correct
 #define KEY_END 0xbfab00
 #define KEY_PD 0xc2ae00
 
@@ -265,7 +265,7 @@ enum kbd_dir_t {
   DIR2 = 0x01,
 };
 
-const struct kbd_key_t keys[88];
+const struct kbd_key_t keys[90];
 const size_t keys_sz;
 
 bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh);
@@ -280,18 +280,18 @@ bool kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...);
 bool kbd_send_start(libusb_device_handle *kbdh);
 bool kbd_send_end(libusb_device_handle *kbdh);
 
-void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *kmap);
-void kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color);
-void kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b);
-void kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level);
-void kbd_set_speed(libusb_device_handle *kbdh, uint8_t level);
-void kbd_set_report_rate(libusb_device_handle *kbdh, enum kbd_rate_t rate);
-void kbd_set_direction(libusb_device_handle *kbdh, enum kbd_dir_t dir);
-void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
-void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode);
+bool kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *kmap);
+bool kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color);
+bool kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b);
+bool kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level);
+bool kbd_set_speed(libusb_device_handle *kbdh, uint8_t level);
+bool kbd_set_report_rate(libusb_device_handle *kbdh, enum kbd_rate_t rate);
+bool kbd_set_direction(libusb_device_handle *kbdh, enum kbd_dir_t dir);
+bool kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
+bool kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode);
 
 void kbd_print_modes(void);
-void kbd_read_keymap_file(const char *fname, struct kbd_keymap_t *kmap);
+bool kbd_read_keymap_file(const char *fname, struct kbd_keymap_t *kmap);
 enum kbd_mode_t kbd_get_mode(const char *modestr);
 const struct kbd_key_t *kbd_get_key(const char *name);
 

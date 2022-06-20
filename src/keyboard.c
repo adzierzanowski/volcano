@@ -132,7 +132,7 @@ bool kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...) {
   return status;
 }
 
-void kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color) {
+bool kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color) {
   uint8_t d1 = (key >> 16) & 0xff;
   uint8_t d5 = (key >> 8) & 0xff;
   uint8_t d6 = key & 0xff;
@@ -140,10 +140,12 @@ void kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color)
   uint8_t g = (color >> 8) & 0xff;
   uint8_t b = color & 0xff;
 
-  kbd_send_start(kbdh);
-  kbd_va_send_and_recv(
-    kbdh, 11, 0x04, d1, 0x00, 0x11, 0x03, d5, d6, 0x00, r, b, g );
-  kbd_send_end(kbdh);
+  if (!kbd_send_start(kbdh)) return false;
+  if (!kbd_set_mode(kbdh, KBD_MODE_CUSTOM)) return false;
+  if (!kbd_va_send_and_recv(
+    kbdh, 11, 0x04, d1, 0x00, 0x11, 0x03, d5, d6, 0x00, r, b, g)) return false;
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }
 
 bool kbd_send_start(libusb_device_handle *kbdh) {
@@ -154,7 +156,7 @@ bool kbd_send_end(libusb_device_handle *kbdh) {
   return kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
 }
 
-const struct kbd_key_t keys[88] = {
+const struct kbd_key_t keys[90] = {
   { .name = "PLUS", .val = KEY_PLUS },
   { .name = "DEL", .val = KEY_DEL },
   { .name = "A", .val = KEY_A },
@@ -238,7 +240,9 @@ const struct kbd_key_t keys[88] = {
   { .name = "LALT", .val = KEY_LALT },
   { .name = "RCTRL", .val = KEY_RCTRL },
   { .name = "WIN", .val = KEY_WIN },
+  { .name = "META", .val = KEY_WIN },
   { .name = "QMARK", .val = KEY_QMARK },
+  { .name = "SLASH", .val = KEY_QMARK },
   { .name = "SPACE", .val = KEY_SPACE },
   { .name = "V", .val = KEY_V },
   { .name = "M", .val = KEY_M },
@@ -256,24 +260,26 @@ const struct kbd_key_t *kbd_get_key(const char *name) {
   return NULL;
 }
 
-void kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b) {
-  kbd_send_start(kbdh);
-  kbd_va_send_and_recv(
+bool kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b) {
+  if (!kbd_send_start(kbdh)) return false;
+  if (!kbd_va_send_and_recv(
     kbdh,
     11,
-    0x04, 0x0d, 0x01, 0x06, 0x03, 0x05, 0x00, 0x00, r, b, g);
-  kbd_send_end(kbdh);
+    0x04, 0x0d, 0x01, 0x06, 0x03, 0x05, 0x00, 0x00, r, b, g)) return false;
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }
 
-void kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow) {
-  kbd_send_start(kbdh);
+bool kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow) {
+  if (!kbd_send_start(kbdh)) return false;
   if (rainbow) {
-    kbd_va_send_and_recv(
-      kbdh, 9, 0x04, 0x0c, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x01);
+    if (!kbd_va_send_and_recv(
+      kbdh, 9, 0x04, 0x0c, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x01)) return false;
   } else {
-    kbd_va_send_and_recv(kbdh, 6, 0x04, 0x0b, 0x00, 0x06, 0x01, 0x04);
+    if (!kbd_va_send_and_recv(kbdh, 6, 0x04, 0x0b, 0x00, 0x06, 0x01, 0x04)) return false;
   }
-  kbd_send_end(kbdh);
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }
 
 enum kbd_mode_t kbd_get_mode(const char *modestr) {
@@ -343,12 +349,12 @@ void kbd_print_modes(void) {
   puts("    rgb-circle      ---D    Fast and the Furious");
 }
 
-void kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode) {
-  kbd_va_send_and_recv(
+bool kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode) {
+  return kbd_va_send_and_recv(
     kbdh, 9, 0x04, mode, 0x00, 0x06, 0x01, 0x00, 0x00, 0x00, mode - 0x07);
 }
 
-void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *k) {
+bool kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *k) {
   uint8_t line1[64] = {
     0x04,        0xd4,        0x02,       0x08,
     0x38,        0x00,        0x00,       0x00,
@@ -474,50 +480,57 @@ void kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *k) {
     0x02, 0x54, 0x02, 0x02, 0x60, 0x02, 0x02, 0x5d
   };
 
-  kbd_send_start(kbdh);
-  kbd_va_send_and_recv(
+  if (!kbd_send_start(kbdh)) return false;
+  if (!kbd_va_send_and_recv(
     kbdh, 15,
     0x04, 0x2a, 0x01, 0x0a, 0x10, 0x00, 0x00, 0x00,
-    0xaa, 0x55, 0x10, 0x00, 0x00, 0x00, 0x01);
-  kbd_send_and_recv(kbdh, line1);
-  kbd_send_and_recv(kbdh, line2);
-  kbd_send_and_recv(kbdh, line3);
-  kbd_send_and_recv(kbdh, line4);
-  kbd_send_and_recv(kbdh, line5);
-  kbd_send_and_recv(kbdh, line6);
-  kbd_send_and_recv(kbdh, line7);
-  kbd_send_end(kbdh);
+    0xaa, 0x55, 0x10, 0x00, 0x00, 0x00, 0x01)) return false;
+  if (!kbd_send_and_recv(kbdh, line1)) return false;
+  if (!kbd_send_and_recv(kbdh, line2)) return false;
+  if (!kbd_send_and_recv(kbdh, line3)) return false;
+  if (!kbd_send_and_recv(kbdh, line4)) return false;
+  if (!kbd_send_and_recv(kbdh, line5)) return false;
+  if (!kbd_send_and_recv(kbdh, line6)) return false;
+  if (!kbd_send_and_recv(kbdh, line7)) return false;
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }
 
-void kbd_read_keymap_file(const char *fname, struct kbd_keymap_t *kmap) {
+bool kbd_read_keymap_file(const char *fname, struct kbd_keymap_t *kmap) {
   FILE *f = fopen(fname, "rb");
+  if (f == NULL) return false;
   fread(kmap, sizeof (struct kbd_keymap_t), 1, f);
   fclose(f);
+  return true;
 }
 
-void kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level) {
-  kbd_send_start(kbdh);
-  kbd_va_send_and_recv(
-    kbdh, 9, 0x04, 0x08 + level, 0x00, 0x06, 0x01, 0x01, 0x00, 0x00, level);
-  kbd_send_end(kbdh);
+bool kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level) {
+  if (!kbd_send_start(kbdh)) return false;
+  if (!kbd_va_send_and_recv(
+    kbdh, 9, 0x04, 0x08 + level, 0x00, 0x06, 0x01, 0x01, 0x00, 0x00, level)) return false;
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }
 
-void kbd_set_speed(libusb_device_handle *kbdh, uint8_t level) {
-  kbd_send_start(kbdh);
-  kbd_va_send_and_recv(
-    kbdh, 9, 0x04, 0x0d - level, 0x00, 0x06, 0x01, 0x02, 0x00, 0x00, 0x04 - level);
-  kbd_send_end(kbdh);
+bool kbd_set_speed(libusb_device_handle *kbdh, uint8_t level) {
+  if (!kbd_send_start(kbdh)) return false;
+  if (!kbd_va_send_and_recv(
+    kbdh, 9, 0x04, 0x0d - level, 0x00, 0x06, 0x01, 0x02, 0x00, 0x00, 0x04 - level)) return false;
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }
 
-void kbd_set_report_rate(libusb_device_handle *kbdh, enum kbd_rate_t rate) {
-  kbd_send_start(kbdh);
-  kbd_va_send_and_recv(
-    kbdh, 9, 0x04, 0x16 + rate, 0x00, 0x06, 0x01, 0x0f, 0x00, 0x00, rate);
-  kbd_send_end(kbdh);
+bool kbd_set_report_rate(libusb_device_handle *kbdh, enum kbd_rate_t rate) {
+  if (!kbd_send_start(kbdh)) return false;
+  if (!kbd_va_send_and_recv(
+    kbdh, 9, 0x04, 0x16 + rate, 0x00, 0x06, 0x01, 0x0f, 0x00, 0x00, rate)) return false;
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }
 
-void kbd_set_direction(libusb_device_handle *kbdh, enum kbd_dir_t dir) {
-  kbd_send_start(kbdh);
-  kbd_va_send_and_recv(kbdh, 0, 0x04, 0x0a+dir, 0x00, 0x06, 0x01, 0x03, 0x00, 0x00, dir);
-  kbd_send_end(kbdh);
+bool kbd_set_direction(libusb_device_handle *kbdh, enum kbd_dir_t dir) {
+  if (!kbd_send_start(kbdh)) return false;
+  if (!kbd_va_send_and_recv(kbdh, 0, 0x04, 0x0a+dir, 0x00, 0x06, 0x01, 0x03, 0x00, 0x00, dir)) return false;
+  if (!kbd_send_end(kbdh)) return false;
+  return true;
 }

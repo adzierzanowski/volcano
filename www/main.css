@@ -1,0 +1,160 @@
+body {
+  font-family: 'Jetbrains Mono', monospace;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  padding: 10px 15px;
+  font-family: inherit;
+}
+
+button:hover {
+  filter: brightness(0.9);
+}
+
+input {
+  font-family: inherit;
+}
+
+input:invalid {
+  color: red;
+}
+
+section {
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+
+footer {
+  margin: 20px 10px;
+  font-size: 10px;
+}
+
+.control {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-palette {
+  padding: 0;
+  cursor: none;
+}
+
+.btn-palette:hover {
+  border: 1px solid white;
+  border-radius: 2px;
+  transform: scale(130%);
+}
+
+.btn-mode {
+  border: none;
+  border-top: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  flex-grow: 1;
+}
+
+.color-input {
+  border-width: 1px;
+  padding: 4px 10px;
+}
+
+#content {
+  width: 90%;
+  margin: auto;
+}
+
+#modes-section {
+  width: 25%;
+}
+
+#modes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-around;
+  border-left: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+#controls {
+  display: flex;
+  gap: 20px;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+}
+
+#rgb-input {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+#color-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#color-inputs__nav {
+  display: flex;
+  gap: 10px;
+}
+
+#color-preview {
+  min-width: 100px;
+  min-height: 50px;
+  border: 1px solid #ddd;
+  background-color: black;
+}
+
+#color-palette {
+  display: grid;
+  grid-template-columns: repeat(49, 12px);
+  grid-template-rows: repeat(7, 12px);
+  margin: auto;
+  border: 1px solid #ddd;
+}
+
+#keyboard-section {
+  padding: 20px;
+}
+
+.keyboard {
+  width: 1000px;
+  height: 326px;
+  position: relative;
+}
+
+.keyboard button {
+  position: absolute;
+  width: 50px;
+  border: 1px solid #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#misc-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#keyboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 10px;
+}
+
+#misc-section {
+  width: 25%;
+}

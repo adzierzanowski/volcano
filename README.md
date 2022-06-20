@@ -34,8 +34,11 @@ $ python3 -m pip install -r requirements.txt
 
 # Creating keymaps
 
-Create keymapping in a YAML file and convert it to binary file. Then load it
-using `volcano` or `volcanod` (see *Daemon* section).
+You can easily create keyboard mappings through web control panel of the
+daemon.
+
+Another way to Create keymapping is to convert a YAML file to binary file and
+then load it using `volcano` or `volcanod` (see *Daemon* section).
 
 ```
 $ python3 tools/mkmap.py sample-keymap.yml kmap.dat
@@ -49,7 +52,16 @@ for commands in background and reacts to hotplugging of the keyboard.
 
 ## Installation (macOS)
 
-First, create `.volcanorc` file with basic configuration:
+Clone the repository and build it:
+
+
+```bash
+$ git clone https://github.com/adzierzanowski/volcano.git /Users/user/volcano
+$ cd /Users/user/volcano
+$ make
+```
+
+Create `.volcanorc` file with basic configuration:
 
 ```conf
 SOCKET_FILE=/Users/user/.volcano.sock
@@ -57,6 +69,10 @@ KMAP_FILE=/Users/user/kmap.dat
 INIT_MODE=ripple
 INIT_COLOR=00ffff
 LOGLEVEL=1
+SRV_ENABLE=1
+SRV_PORT=65226
+SRV_DATA=/Users/user/volcano/www
+SRV_EXE=/Users/user/volcano/bin/volcanosrv
 ```
 
 | Key           | Description                                                  |
@@ -66,6 +82,9 @@ LOGLEVEL=1
 | `INIT_MODE`   | Initial color scheme after plugging                          |
 | `INIT_COLOR`  | Initial color                                                |
 | `LOGLEVEL`    | Logging verbosity (`0`=ERROR, `1`=WARN, `2`=INFO, `3`=DEBUG) |
+| `SRV_ENABLE`  | Enable locally hosted www control panel                      |
+| `SRV_PORT`    | Port at which the control panel is server                    |
+| `SRV_DATA`    | Path to the control panel assets                             |
 
 Next, create `volcanod.plist` file in `/Library/LaunchDaemons` folder:
 
@@ -109,15 +128,16 @@ $ sudo launchctl unload /Library/LaunchDaemons/volcanod.plist
 
 ## Socket Commands
 
-| Command                  | Description         |
-|--------------------------|---------------------|
-| `kmap [FILE]`            | map keys            |
-| `mode MODE`              | set color mode      |
-| `color [R [G [B]]]`      | set color           |
-| `kcolor KEY [R [G [B]]]` | set color           |
-| `speed LEVEL`            | animation speed     |
-| `brightness LEVEL`       | brightness level    |
-| `dir DIR`                | animation direction |
+| Command                  | Description         | Argument range                                                      |
+|--------------------------|---------------------|---------------------------------------------------------------------|
+| `kmap [FILE]`            | map keys            | a path                                                              |
+| `mode MODE`              | set color mode      | mode name, see `volcano -m list`                                    |
+| `color [R [G [B]]]`      | set color           | 0 <= `R`, `G`, `B` <= 255                                           |
+| `kcolor KEY [R [G [B]]]` | set color           | KEY - see `sample-kmap.yml` for reference, 0 <= `R`, `G`, `B` < 256 |
+| `speed LEVEL`            | animation speed     | 0 <= `LEVEL` <= 4                                                   |
+| `brightness LEVEL`       | brightness level    | 0 <= `LEVEL` <= 4                                                   |
+| `dir DIR`                | animation direction | 0 <= `DIR` <= 1                                                     |
+| `rate RATE`              | USB report rate     | `RATE` in (125, 250, 500, 1000)                                     |
 
 # Main executable usage
 
@@ -169,7 +189,7 @@ Implemented things:
 * setting the whole keyboard color in supported modes
 * clearing the whole keyboard
 * switching between color schemes
-* GUI in Tkinter
+* self-served driver control panel
 * key mappings
 * updating settings on PnP
 
@@ -177,38 +197,6 @@ To implement (and to check if it's possible):
 
 * macros
 * defining custom color schemes
-
-## Packets
-
-If you compile `packets_cli.c` (`make packets`) you'll get an executable which
-takes filenames as arguments. Each file is a packet file.
-
-Packets are just binary files (from 1 to 64 bytes in size) which are directly
-sent to the keyboard as a control transfer.
-
-To make such packet, you can click "export binary" in the DMS URB view or
-use some hex editor.
-
-eg.
-
-```bash
-$ packets pck/start pck/norm-on pck/end
-```
-
----
-
-Of course you can modify the code directly and use
-
-```c
-uint8_t start[64] = { 0x04, 0x01, 0x00, 0x01 };
-kbd_send_and_recv(kbdh, start);
-```
-
-or
-
-```c
-kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
-```
 
 ## Other files
 

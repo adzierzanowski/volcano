@@ -8,6 +8,8 @@ with open(sys.argv[1], 'r') as f:
 
 print(usermap)
 
+usermap = usermap if usermap else {}
+
 print(KEYCODES.keys())
 
 keys = (
@@ -45,6 +47,7 @@ for key in keys:
   else:
     data += b'\x02'
 
+print(len(data))
 
 with open(sys.argv[2], 'wb') as f:
   f.write(data)
