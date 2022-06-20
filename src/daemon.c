@@ -1,106 +1,237 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <getopt.h>
-#include <errno.h>
-
-#include "fmt.h"
-#include "keyboard.h"
+#include "daemon.h"
 
 
+// A flag which is being set on hotplug and is used in the main routine
 static bool kbd_hotplugged = false;
 
+// Global libusb handles
+// They're being set in the hotplug handler
+// and used throughout the program
 static libusb_context *ctx = NULL;
 static libusb_device_handle *kbdh = NULL;
 
-struct sockaddr_un addr;
-struct timeval timeout = { .tv_usec = 100000 };
+static struct sockaddr_un addr;
 
-struct config_t {
-  char *kmap_file;
-  char *socket_file;
-  char *init_mode;
-  char *srv_data;
-  char *srv_exe;
-  uint32_t init_color;
-  uint16_t srv_port;
-  bool srv_enable;
-} config;
+// Timeout for libusb polling
+static struct timeval timeout = { .tv_usec = 100000 };
 
-enum status_t {
-  OK = 0,
-  ERR_KH_NULL,
-  ERR_CMD_NULL,
-  ERR_CMD_UNKNOWN,
-  ERR_CMD_ARGS_MISSING,
-  ERR_CMD_ARGS_RANGE,
-  ERR_MODE_UNKNOWN,
-  ERR_KBD_CLAIM,
-  ERR_KBD_RELEASE,
-  ERR_KBD_KMAP,
-  ERR_KBD_MODE,
-  ERR_KBD_BRIGHTNESS,
-  ERR_KBD_DIR,
-  ERR_KBD_RAINBOW,
-  ERR_KBD_RATE,
-  ERR_KBD_COLOR,
-  ERR_KBD_KCOLOR,
-  ERR_KBD_SPEED,
-  ERR_KMAP_READ,
-  ERR_KEY_UNKNOWN
-};
-
-const char *status_str(enum status_t status) {
-  switch (status) {
-    case OK:
-      return "OK";
-    case ERR_KH_NULL:
-      return "Keyboard handle is NULL.";
-    case ERR_CMD_NULL:
-      return "Empty command.";
-    case ERR_CMD_UNKNOWN:
-      return "Command unknown.";
-    case ERR_CMD_ARGS_MISSING:
-      return "Insufficient command arguments.";
-    case ERR_CMD_ARGS_RANGE:
-      return "Command arguments not in range.";
-    case ERR_MODE_UNKNOWN:
-      return "Color mode unknown.";
-    case ERR_KEY_UNKNOWN:
-      return "Key unknown.";
-    case ERR_KBD_CLAIM:
-      return "Failed to connect to the keyboard.";
-    case ERR_KBD_RELEASE:
-      return "Failed to release the keyboard.";
-    case ERR_KBD_KMAP:
-      return "Failed to map keys.";
-    case ERR_KBD_MODE:
-      return "Failed to set color mode.";
-    case ERR_KBD_BRIGHTNESS:
-      return "Failed to set brightness.";
-    case ERR_KBD_COLOR:
-      return "Failed to set color.";
-    case ERR_KBD_KCOLOR:
-      return "Failed to set key color.";
-    case ERR_KMAP_READ:
-      return "Failed reading kmap file.";
-    case ERR_KBD_DIR:
-      return "Failed to set direction.";
-    case ERR_KBD_RAINBOW:
-      return "Failed to set rainbow.";
-    case ERR_KBD_RATE:
-      return "Failed to set report rate.";
-    case ERR_KBD_SPEED:
-      return "Failed to set animation speed.";
-    default:
-      return "Unknown error.";
+// Default keyboard remapper
+static bool remap(const char *fname) {
+  dlog(LOG_INFO, "Remapping from file %s\n", fname);
+  struct kbd_keymap_t kmap;
+  if (!kbd_read_keymap_file(fname, &kmap)) {
+    dlog(LOG_ERROR, "Failed reading kmap file.\n");
+    return false;
   }
+  kbd_remap(kbdh, &kmap);
+  dlog(LOG_DEBUG, "Remapping complete\n");
+  return true;
+}
+
+// Sends initial configuration commands to the keyboard when hotplugged
+static void on_hotplug() {
+  if (kbdh) {
+    kbd_claim();
+    dlog(LOG_INFO, "Hotplug: Remapping keys.\n");
+    remap(config.kmap_file);
+    dlog(LOG_INFO, "Hotplug: Setting initial mode to %s.\n", config.init_mode);
+    enum kbd_mode_t mode = kbd_get_mode(config.init_mode);
+    kbd_set_mode(kbdh, mode);
+    kbd_release();
+    kbd_claim();
+    dlog(LOG_INFO,
+      "Hotplug: Setting initial color to #%06x.\n", config.init_color);
+    kbd_set_color(
+      kbdh, config.init_color >> 16, config.init_color >> 8, config.init_color);
+    kbd_release();
+  }
+}
+
+
+int main(int argc, const char *argv[]) {
+  config.srv_port = 65226;
+
+  dlog(LOG_INFO, "\n");
+  dlog(LOG_INFO, "Starting volcanod\n");
+  for (int i = 0; i < argc; i++) {
+    dlog(LOG_DEBUG, "argv[%d]=%s\n", i, argv[i]);
+  }
+
+  if (argc < 2) {
+    dlog(LOG_ERROR, "Need a config file path as an argument.\n");
+    exit(1);
+  } else {
+    init_config(argv[1]);
+  }
+
+  if (config.srv_enable) {
+    pid_t pid = fork();
+
+    if (pid == 0) {
+      dlog(LOG_INFO, "Creating a child server.\n");
+
+      char srv_port[6] = {0};
+      sprintf(srv_port, "%hu", config.srv_port);
+      char srv_data[SMALLBUFSZ] = {0};
+      sprintf(srv_data, "%s", config.srv_data);
+      char srv_socket[SMALLBUFSZ] = {0};
+      sprintf(srv_socket, "%s", config.socket_file);
+
+      int err = execl(config.srv_exe, "volcanosrv", srv_port, srv_data, srv_socket, (char *)0);
+      if (err) {
+        dlog(LOG_ERROR, "execl failed: %s\n", strerror(errno));
+        exit(1);
+      }
+
+    } else if (pid < 0) {
+      dlog(LOG_ERROR, "Could not create a child process.\n");
+      exit(1);
+
+    } else {
+      return daemon_main(argc, argv);
+    }
+  }
+
+  return daemon_main(argc, argv);
+}
+
+int daemon_main(int argc, const char *argv[]) {
+  libusb_init(&ctx);
+  libusb_hotplug_callback_handle cbhandle;
+
+  dlog(LOG_DEBUG, "Attempting to register hotplug callback.\n");
+  int status = libusb_hotplug_register_callback(
+    ctx,
+    LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
+    0,
+    KBD_VID,
+    KBD_PID,
+    LIBUSB_HOTPLUG_MATCH_ANY,
+    hotplug_handler,
+    NULL,
+    &cbhandle);
+
+  if (status != 0) {
+    dlog(LOG_ERROR, "Failed to register hotplug callback.\n");
+    exit(1);
+  }
+
+  if (!kbdh) {
+    kbdh = libusb_open_device_with_vid_pid(ctx, KBD_VID, KBD_PID);
+    dlog(LOG_INFO, "Initial keyboard connection: %p\n", kbdh);
+    if (!kbdh) {
+      dlog(LOG_ERROR, "Failed to connect to the keyboard.\n");
+      exit(1);
+    }
+  }
+
+  on_hotplug();
+
+  int s = create_socket();
+  dlog(LOG_INFO, "Socket created: fd=%d\n", s);
+
+  for (;;) {
+    libusb_handle_events_timeout_completed(ctx, &timeout, NULL);
+    socklen_t len;
+
+    if (kbd_hotplugged) {
+      kbd_hotplugged = false;
+      on_hotplug();
+    }
+
+    int rsock = accept(s, (struct sockaddr *) &addr, &len);
+
+    if (rsock != -1) {
+      char buf[SMALLBUFSZ] = {0};
+      ssize_t rlen = recv(rsock, buf, SMALLBUFSZ, 0);
+      dlog(LOG_DEBUG, "Received %zd bytes: %s\n", rlen, buf);
+
+      if (!kbdh) {
+        dlog(LOG_ERROR, "Keyboard handle is NULL.\n");
+        send(rsock, status_str(ERR_KH_NULL), strlen(status_str(ERR_KH_NULL)), 0);
+        close(rsock);
+        continue;
+      }
+
+      enum status_t status = parse_command(buf);
+      send(rsock, status_str(status), strlen(status_str(status)), 0);
+      close(rsock);
+    }
+
+    usleep(100000);
+  }
+
+  return 0;
+}
+
+bool kbd_claim() {
+  if (libusb_detach_kernel_driver(kbdh, CTL_INTERFACE)) return false;
+  if (libusb_claim_interface(kbdh, CTL_INTERFACE)) return false;
+  return true;
+}
+
+bool kbd_release() {
+  // TODO: kbd_release status is LIBUSB_LOG_ERROR_NOT_FOUND but it seems to work ok
+  if (libusb_release_interface(kbdh, CTL_INTERFACE)) return false;
+  if (libusb_attach_kernel_driver(kbdh, CTL_INTERFACE)) return false;
+  return true;
+}
+
+int create_socket() {
+  struct stat statbuf;
+  int res = stat(config.socket_file, &statbuf);
+  if (res == 0) {
+    remove(config.socket_file);
+  }
+
+  addr.sun_family = AF_UNIX;
+  strcpy(addr.sun_path, config.socket_file);
+
+  int s = socket(AF_UNIX, SOCK_STREAM, 0);
+
+  fcntl(s, F_SETFL, O_NONBLOCK);
+
+  if (s == -1) {
+    dlog(LOG_ERROR, "Could not create socket.\n");
+    exit(1);
+  }
+
+  if (bind(s, (struct sockaddr *) &addr, strlen(addr.sun_path) + sizeof (addr.sun_family) + 1) == -1) {
+    dlog(LOG_ERROR, "Failed to bind to the socket.\n");
+    exit(1);
+  }
+
+  // TODO: configurable user and group
+  dlog(LOG_INFO, "Setting permissions to the socket file.\n");
+  chmod(config.socket_file, S_IRWXG | S_IRWXO | S_IRWXU);
+  chown(config.socket_file, 501, 20);
+
+  if (listen(s, 5) == -1) {
+    dlog(LOG_ERROR, "Failed to listen.\n");
+    exit(1);
+  }
+
+  return s;
+}
+
+int hotplug_handler(
+    struct libusb_context *ctx,
+    struct libusb_device *dev,
+    libusb_hotplug_event event,
+    void *user_data) {
+
+  if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+    kbdh = libusb_open_device_with_vid_pid(ctx, KBD_VID, KBD_PID);
+    dlog(LOG_INFO, "Keyboard hotplugged\n");
+    kbd_hotplugged = true;
+
+  } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+    libusb_close(kbdh);
+    kbdh = NULL;
+    dlog(LOG_INFO, "Keyboard unplugged\n");
+  }
+
+  return 0;
 }
 
 void init_config(const char *rcfname) {
@@ -174,87 +305,6 @@ void init_config(const char *rcfname) {
   dlog(LOG_DEBUG, "srv data:    %s\n", config.srv_data);
 }
 
-bool remap(const char *fname) {
-  dlog(LOG_INFO, "Remapping from file %s\n", fname);
-  struct kbd_keymap_t kmap;
-  if (!kbd_read_keymap_file(fname, &kmap)) {
-    dlog(LOG_ERROR, "Failed reading kmap file.\n");
-    return false;
-  }
-  kbd_remap(kbdh, &kmap);
-  dlog(LOG_DEBUG, "Remapping complete\n");
-  return true;
-}
-
-int hotplug_handler(
-    struct libusb_context *ctx,
-    struct libusb_device *dev,
-    libusb_hotplug_event event,
-    void *user_data) {
-  if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-    kbdh = libusb_open_device_with_vid_pid(ctx, KBD_VID, KBD_PID);
-    dlog(LOG_INFO, "Keyboard hotplugged\n");
-    kbd_hotplugged = true;
-
-  } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-    libusb_close(kbdh);
-    kbdh = NULL;
-    dlog(LOG_INFO, "Keyboard unplugged\n");
-  }
-
-  return 0;
-}
-
-int create_socket() {
-  struct stat statbuf;
-  int res = stat(config.socket_file, &statbuf);
-  if (res == 0) {
-    remove(config.socket_file);
-  }
-
-  addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, config.socket_file);
-
-  int s = socket(AF_UNIX, SOCK_STREAM, 0);
-
-  fcntl(s, F_SETFL, O_NONBLOCK);
-
-  if (s == -1) {
-    dlog(LOG_ERROR, "Could not create socket.\n");
-    exit(1);
-  }
-
-  if (bind(s, (struct sockaddr *) &addr, strlen(addr.sun_path) + sizeof (addr.sun_family) + 1) == -1) {
-    dlog(LOG_ERROR, "Failed to bind to the socket.\n");
-    exit(1);
-  }
-
-  // TODO: configurable user and group
-  dlog(LOG_INFO, "Setting permissions to the socket file.\n");
-  chmod(config.socket_file, S_IRWXG | S_IRWXO | S_IRWXU);
-  chown(config.socket_file, 501, 20);
-
-  if (listen(s, 5) == -1) {
-    dlog(LOG_ERROR, "Failed to listen.\n");
-    exit(1);
-  }
-
-  return s;
-}
-
-bool claim() {
-  if (libusb_detach_kernel_driver(kbdh, CTL_INTERFACE)) return false;
-  if (libusb_claim_interface(kbdh, CTL_INTERFACE)) return false;
-  return true;
-}
-
-bool release() {
-  // TODO: release status is LIBUSB_LOG_ERROR_NOT_FOUND but it seems to work ok
-  if (libusb_release_interface(kbdh, CTL_INTERFACE)) return false;
-  if (libusb_attach_kernel_driver(kbdh, CTL_INTERFACE)) return false;
-  return true;
-}
-
 enum status_t parse_command(char *cmdbuf) {
   dlog(LOG_DEBUG, "Parsing command\n");
   const char *delim = " \n";
@@ -283,12 +333,12 @@ enum status_t parse_command(char *cmdbuf) {
     if (!kbd_read_keymap_file(kmap_file, &kmap)) {
       return ERR_KMAP_READ;
     }
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_remap(kbdh, &kmap)) {
-      release();
+      kbd_release();
       return ERR_KBD_KMAP;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "kmap") == 0) {
@@ -305,13 +355,12 @@ enum status_t parse_command(char *cmdbuf) {
     memcpy(&kmap, data, 172);
 
     dlog(LOG_INFO, "Mapping keys from direct data.\n");
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_remap(kbdh, &kmap)) {
-      release();
+      kbd_release();
       return ERR_KBD_KMAP;
     }
-    if (!release()) return ERR_KBD_RELEASE;
-
+    if (!kbd_release()) return ERR_KBD_RELEASE;
 
     return OK;
 
@@ -331,12 +380,12 @@ enum status_t parse_command(char *cmdbuf) {
     }
 
     dlog(LOG_INFO, "Setting mode to %s.\n", tok);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_mode(kbdh, mode)) {
-      release();
+      kbd_release();
       return ERR_KBD_MODE;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "color") == 0) {
@@ -372,12 +421,12 @@ enum status_t parse_command(char *cmdbuf) {
     }
 
     dlog(LOG_INFO, "Setting color to RGB(%d, %d, %d) HEX(#%02x%02x%02x).\n", r, g, b, r, g, b);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_color(kbdh, r, g, b)) {
-      release();
+      kbd_release();
       return ERR_KBD_COLOR;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "kcolor") == 0) {
@@ -435,18 +484,18 @@ enum status_t parse_command(char *cmdbuf) {
       LOG_INFO,
       "Setting key %s to RGB(%d, %d, %d) HEX(#%02x%02x%02x).\n",
       keycode, r, g, b, r, g, b);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_mode(kbdh, KBD_MODE_CUSTOM)) {
-      release();
+      kbd_release();
       return ERR_KBD_MODE;
     }
     uint32_t color = (r << 16) | (g << 8) | b;
     dlog(LOG_DEBUG, "color=%06x\n", color);
     if (!kbd_set_key_color(kbdh, key->val, color)) {
-      release();
+      kbd_release();
       return ERR_KBD_KCOLOR;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "brightness") == 0) {
@@ -463,12 +512,12 @@ enum status_t parse_command(char *cmdbuf) {
     }
 
     dlog(LOG_INFO, "Setting brightness level to %d\n", level);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_brightness(kbdh, level)) {
-      release();
+      kbd_release();
       return ERR_KBD_BRIGHTNESS;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "speed") == 0) {
@@ -485,12 +534,12 @@ enum status_t parse_command(char *cmdbuf) {
     }
 
     dlog(LOG_INFO, "Setting speed level to %d.\n", level);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_speed(kbdh, level)) {
-      release();
+      kbd_release();
       return ERR_KBD_SPEED;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "rate") == 0) {
@@ -516,12 +565,12 @@ enum status_t parse_command(char *cmdbuf) {
     }
 
     dlog(LOG_INFO, "Setting report rate to %s Hz.\n", tok);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_report_rate(kbdh, rate)) {
-      release();
+      kbd_release();
       return ERR_KBD_RATE;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "dir") == 0) {
@@ -539,12 +588,12 @@ enum status_t parse_command(char *cmdbuf) {
     }
 
     dlog(LOG_INFO, "Setting direction to %d.\n", dir);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_direction(kbdh, dir)) {
-      release();
+      kbd_release();
       return ERR_KBD_DIR;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
 
   } else if (strcmp(tok, "rainbow") == 0) {
@@ -565,12 +614,12 @@ enum status_t parse_command(char *cmdbuf) {
     }
 
     dlog(LOG_INFO, "Setting rainbow to %s.\n", tok);
-    if (!claim()) return ERR_KBD_CLAIM;
+    if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_rainbow(kbdh, rainbow)) {
-      release();
+      kbd_release();
       return ERR_KBD_RAINBOW;
     }
-    if (!release()) return ERR_KBD_RELEASE;
+    if (!kbd_release()) return ERR_KBD_RELEASE;
     return OK;
   }
 
@@ -578,135 +627,49 @@ enum status_t parse_command(char *cmdbuf) {
   return ERR_CMD_UNKNOWN;
 }
 
-
-static void on_hotplug() {
-  if (kbdh) {
-    claim();
-    dlog(LOG_INFO, "Hotplug: Remapping keys.\n");
-    remap(config.kmap_file);
-    dlog(LOG_INFO, "Hotplug: Setting initial mode to %s.\n", config.init_mode);
-    enum kbd_mode_t mode = kbd_get_mode(config.init_mode);
-    kbd_set_mode(kbdh, mode);
-    release();
-    claim();
-    dlog(LOG_INFO, "Hotplug: Setting initial color to #%06x.\n", config.init_color);
-    kbd_set_color(kbdh, config.init_color >> 16, config.init_color >> 8, config.init_color);
-    release();
+const char *status_str(enum status_t status) {
+  switch (status) {
+    case OK:
+      return "OK";
+    case ERR_KH_NULL:
+      return "Keyboard handle is NULL.";
+    case ERR_CMD_NULL:
+      return "Empty command.";
+    case ERR_CMD_UNKNOWN:
+      return "Command unknown.";
+    case ERR_CMD_ARGS_MISSING:
+      return "Insufficient command arguments.";
+    case ERR_CMD_ARGS_RANGE:
+      return "Command arguments not in range.";
+    case ERR_MODE_UNKNOWN:
+      return "Color mode unknown.";
+    case ERR_KEY_UNKNOWN:
+      return "Key unknown.";
+    case ERR_KBD_CLAIM:
+      return "Failed to connect to the keyboard.";
+    case ERR_KBD_RELEASE:
+      return "Failed to kbd_release the keyboard.";
+    case ERR_KBD_KMAP:
+      return "Failed to map keys.";
+    case ERR_KBD_MODE:
+      return "Failed to set color mode.";
+    case ERR_KBD_BRIGHTNESS:
+      return "Failed to set brightness.";
+    case ERR_KBD_COLOR:
+      return "Failed to set color.";
+    case ERR_KBD_KCOLOR:
+      return "Failed to set key color.";
+    case ERR_KMAP_READ:
+      return "Failed reading kmap file.";
+    case ERR_KBD_DIR:
+      return "Failed to set direction.";
+    case ERR_KBD_RAINBOW:
+      return "Failed to set rainbow.";
+    case ERR_KBD_RATE:
+      return "Failed to set report rate.";
+    case ERR_KBD_SPEED:
+      return "Failed to set animation speed.";
+    default:
+      return "Unknown error.";
   }
-}
-
-int daemon_main(int argc, const char *argv[]) {
-  libusb_init(&ctx);
-  libusb_hotplug_callback_handle cbhandle;
-
-  dlog(LOG_DEBUG, "Attempting to register hotplug callback.\n");
-  int status = libusb_hotplug_register_callback(
-    ctx,
-    LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT,
-    0,
-    KBD_VID,
-    KBD_PID,
-    LIBUSB_HOTPLUG_MATCH_ANY,
-    hotplug_handler,
-    NULL,
-    &cbhandle);
-
-  if (status != 0) {
-    dlog(LOG_ERROR, "Failed to register hotplug callback.\n");
-    exit(1);
-  }
-
-  if (!kbdh) {
-    kbdh = libusb_open_device_with_vid_pid(ctx, KBD_VID, KBD_PID);
-    dlog(LOG_INFO, "Initial keyboard connection: %p\n", kbdh);
-    if (!kbdh) {
-      dlog(LOG_ERROR, "Failed to connect to the keyboard.\n");
-      exit(1);
-    }
-  }
-
-  on_hotplug();
-
-  int s = create_socket();
-  dlog(LOG_INFO, "Socket created: fd=%d\n", s);
-
-  for (;;) {
-    libusb_handle_events_timeout_completed(ctx, &timeout, NULL);
-    socklen_t len;
-
-    if (kbd_hotplugged) {
-      kbd_hotplugged = false;
-      on_hotplug();
-    }
-
-    int rsock = accept(s, (struct sockaddr *) &addr, &len);
-
-    if (rsock != -1) {
-      char buf[SMALLBUFSZ] = {0};
-      ssize_t rlen = recv(rsock, buf, SMALLBUFSZ, 0);
-      dlog(LOG_DEBUG, "Received %zd bytes: %s\n", rlen, buf);
-
-      if (!kbdh) {
-        dlog(LOG_ERROR, "Keyboard handle is NULL.\n");
-        send(rsock, status_str(ERR_KH_NULL), strlen(status_str(ERR_KH_NULL)), 0);
-        close(rsock);
-        continue;
-      }
-
-      enum status_t status = parse_command(buf);
-      send(rsock, status_str(status), strlen(status_str(status)), 0);
-      close(rsock);
-    }
-
-    usleep(100000);
-  }
-
-  return 0;
-}
-
-int main(int argc, const char *argv[]) {
-  config.srv_port = 65226;
-
-  dlog(LOG_INFO, "\n");
-  dlog(LOG_INFO, "Starting volcanod\n");
-  for (int i = 0; i < argc; i++) {
-    dlog(LOG_DEBUG, "argv[%d]=%s\n", i, argv[i]);
-  }
-
-  if (argc < 2) {
-    dlog(LOG_ERROR, "Need a config file path as an argument.\n");
-    exit(1);
-  } else {
-    init_config(argv[1]);
-  }
-
-  if (config.srv_enable) {
-    pid_t pid = fork();
-
-    if (pid == 0) {
-      dlog(LOG_INFO, "Creating a child server.\n");
-
-      char srv_port[6] = {0};
-      sprintf(srv_port, "%hu", config.srv_port);
-      char srv_data[SMALLBUFSZ] = {0};
-      sprintf(srv_data, "%s", config.srv_data);
-      char srv_socket[SMALLBUFSZ] = {0};
-      sprintf(srv_socket, "%s", config.socket_file);
-
-      int err = execl(config.srv_exe, "volcanosrv", srv_port, srv_data, srv_socket, (char *)0);
-      if (err) {
-        dlog(LOG_ERROR, "execl failed: %s\n", strerror(errno));
-        exit(1);
-      }
-
-    } else if (pid < 0) {
-      dlog(LOG_ERROR, "Could not create a child process.\n");
-      exit(1);
-
-    } else {
-      return daemon_main(argc, argv);
-    }
-  }
-
-  return daemon_main(argc, argv);
 }

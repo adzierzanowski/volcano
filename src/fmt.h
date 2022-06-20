@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <libusb.h>
 
@@ -27,5 +28,7 @@ void print64(uint8_t *buf);
 void dlog(enum loglevel_t level, const char *fmt, ...);
 void set_loglevel(enum loglevel_t level);
 bool strmatch(char *str, ...);
+char **strsplit(char *path, size_t *outsz, const char *path_delim);
+void strsplit_free(char **spath, size_t spathsz);
 
 #endif

@@ -79,3 +79,29 @@ bool strmatch(char *str, ...) {
   va_end(args);
   return false;
 }
+
+char **strsplit(char *str, size_t *outsz, const char *delim) {
+  if (str == NULL) return NULL;
+
+  *outsz = 0;
+  char **out = NULL;
+
+  char *tok = strtok(str, delim);
+  while (tok != NULL) {
+    char *elem = calloc(strlen(tok) + 1, sizeof (char));
+    strcpy(elem, tok);
+    *outsz = *outsz + 1;
+    out = realloc(out, *outsz * sizeof (char *));
+    out[*outsz-1] = elem;
+    tok = strtok(NULL, delim);
+  }
+
+  return out;
+}
+
+void strsplit_free(char **sstr, size_t sstrsz) {
+  for (int i = 0; i < sstrsz; i++) {
+    free(sstr[i]);
+  }
+  free(sstr);
+}

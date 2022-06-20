@@ -1,6 +1,14 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include <stdbool.h>
+#include <string.h>
+
+#include <libusb.h>
+
+#include "fmt.h"
+
+
 #define KBD_VID 0x0c45
 #define KBD_PID 0x0820
 #define CTL_REQUEST_TYPE 0x21
@@ -9,6 +17,7 @@
 #define CTL_INTERFACE 0x01
 #define CTL_ENDPOINT 0x82
 
+// Key definitions for setting individual colors in the custom mode
 #define KEY_ESC 0x140000
 #define KEY_F1 0x170300
 #define KEY_F2 0x1a0600
@@ -102,12 +111,6 @@
 #define KEY_DOWN 0x7d6801
 #define KEY_RIGHT 0x806b01
 
-#include <stdbool.h>
-#include <string.h>
-
-#include <libusb.h>
-
-#include "fmt.h"
 
 struct kbd_key_t {
   const char *name;
@@ -135,6 +138,7 @@ struct kbd_keymap_t {
   uint8_t lctrl_m, rctrl_m, meta_m, menu_m;
 };
 
+// USB report rate
 enum kbd_rate_t {
   KBD_RATE_125HZ = 0x00,
   KBD_RATE_250HZ = 0x01,
@@ -142,6 +146,7 @@ enum kbd_rate_t {
   KBD_RATE_1000HZ = 0x03,
 };
 
+// Keymap codes (seems similar to USB keycodes)
 enum kbd_keymap_key_t {
   KBD_KMAP_MODE_MODAL = 0x01,
   KBD_KMAP_MODE_NORMAL = 0x02,
