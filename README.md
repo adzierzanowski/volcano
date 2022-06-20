@@ -1,4 +1,4 @@
-# Modecom Volcano LAN party UNIX userland driver
+# Modecom Volcano Lanparty RGB keyboard UNIX userland driver
 
 This is an attempt to modify keyboard state (colors, macros) using macOS because
 the only available drivers are made for Windows.
@@ -184,7 +184,7 @@ Some refactoring is certainly needed.
 To sniff USB communication with the original driver I use [Device Monitoring
 Studio](https://www.hhdsoftware.com/device-monitoring-studio).
 
-Implemented things:
+### Implemented things
 
 * setting single keys to a specified color in "Custom" mode
 * setting the whole keyboard color in supported modes
@@ -194,10 +194,11 @@ Implemented things:
 * key mappings
 * updating settings on PnP
 
-To implement (and to check if it's possible):
+### TODO
 
 * macros
-* defining custom color schemes
+* some keycode bugs
+* check if the driver works on Linux
 
 ## Other files
 
