@@ -249,18 +249,18 @@ void config_init(const char *rcfname) {
   // so we must use OS-specific methods.
   char vpath[SMALLBUFSZ] = {0};
   int status = -1;
+  uint32_t vpathsz = SMALLBUFSZ;
 
 #if defined(__APPLE__)
-  uint32_t vpathsz = SMALLBUFSZ;
   status = _NSGetExecutablePath(vpath, &vpathsz);
 #elif defined(__linux__)
-  status = readlink("/proc/self/exe", vpath, SMALLBUFSZ) == -1);
+  status = readlink("/proc/self/exe", vpath, vpathsz);
 #endif
 
   if (status == -1) {
     dlog(
       LOG_WARNING,
-      "Couldn't get volcano path. Needed buffer size: %u\n", vpathsz);
+      "Couldn't get volcano path. Needed buffer size (if on macOS): %u\n", vpathsz);
   }
 
   struct passwd *pw = getpwuid(VOLCANO_DEFAULT_UID);
