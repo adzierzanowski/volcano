@@ -71,14 +71,23 @@ for commands in background and reacts to hotplugging of the keyboard.
 
 ## Installation
 
-Clone the repository and build it:
+### Build
 
+Clone the repository and build it:
 
 ```bash
 $ git clone https://github.com/adzierzanowski/volcano.git /Users/user/volcano
 $ cd /Users/user/volcano
 $ make
 ```
+
+The resulting executables will be created in the `./bin` folder:
+* `volcano` - CLI for controlling the keyboard without the daemon running
+* `volcanod` - the daemon executable
+* `volcanosrv` - the web control panel server communicating with the daemon
+* `volcanoctl` - a shell script which opens the control panel (assuming it uses the default port `65226`)
+
+### Configuration
 
 Create `.volcanorc` file with basic configuration:
 
@@ -109,7 +118,7 @@ SRV_EXE=/Users/user/volcano/bin/volcanosrv
 | `SRV_PORT`    | Port at which the control panel is server                    |
 | `SRV_DATA`    | Path to the control panel assets                             |
 
-### macOS launchctl
+### Installing the daemon: macOS launchctl
 
 Next, create `volcanod.plist` file in `/Library/LaunchDaemons` folder:
 
@@ -151,15 +160,16 @@ To disable
 $ sudo launchctl unload /Library/LaunchDaemons/volcanod.plist
 ```
 
-### Linux
+### Installing the daemon: Linux
 
-Well, you'll have to find out how to install daemons yourself.
+Well, you'll have to find out how to install daemons on Linux yourself.
 
-## Socket Commands
+## Daemon Socket Commands
 
 | Command                  | Description         | Argument range                                                      |
 |--------------------------|---------------------|---------------------------------------------------------------------|
-| `kmap [FILE]`            | map keys            | a path                                                              |
+| `kmap KMAP[172]`         | map keys            | 172 numbers from 0 to 255                                           |
+| `fkmap [FILE]`           | map keys            | a kmap file path                                                    |
 | `mode MODE`              | set color mode      | mode name, see `volcano -m list`                                    |
 | `color [R [G [B]]]`      | set color           | 0 <= `R`, `G`, `B` <= 255                                           |
 | `kcolor KEY [R [G [B]]]` | set color           | KEY - see `sample-kmap.yml` for reference, 0 <= `R`, `G`, `B` < 256 |
@@ -194,7 +204,6 @@ EXAMPLES:
     volcano -C clear                      # clear the entire keyboard
     volcano -C clear-m1    # clear the entire keyboard in custom mode
 ```
-
 
 # Development
 

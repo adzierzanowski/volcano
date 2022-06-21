@@ -49,19 +49,22 @@ static void on_hotplug() {
 
 
 int main(int argc, const char *argv[]) {
-  config.srv_port = 65226;
+  set_loglevel(LOG_DEBUG);
 
   dlog(LOG_INFO, "\n");
   dlog(LOG_INFO, "Starting volcanod\n");
+  char *cwd = getcwd(NULL, 0);
+  dlog(LOG_DEBUG, "CWD: %s\n", cwd);
+  free(cwd);
+
   for (int i = 0; i < argc; i++) {
     dlog(LOG_DEBUG, "argv[%d]=%s\n", i, argv[i]);
   }
 
   if (argc < 2) {
-    dlog(LOG_ERROR, "Need a config file path as an argument.\n");
-    exit(1);
+    config_init(NULL);
   } else {
-    init_config(argv[1]);
+    config_init(argv[1]);
   }
 
   if (config.srv_enable) {
@@ -236,19 +239,82 @@ int hotplug_handler(
   return 0;
 }
 
-void init_config(const char *rcfname) {
+
+void config_init(const char *rcfname) {
   dlog(LOG_INFO, "Initializing config\n");
   dlog(LOG_DEBUG, "Config file path: %s\n", rcfname);
 
-  FILE *f = fopen(rcfname, "r");
-  if (!f) {
-    dlog(LOG_ERROR, "Config file not found (%s).\n", rcfname);
-    exit(1);
-    return;
+  // Path to the volcano executable
+  // Note that argv[0] may contain anything that the parent process put there
+  // so we must use OS-specific methods.
+  char vpath[SMALLBUFSZ] = {0};
+  int status = -1;
+
+#if defined(__APPLE__)
+  uint32_t vpathsz = SMALLBUFSZ;
+  status = _NSGetExecutablePath(vpath, &vpathsz);
+#elif defined(__linux__)
+  status = readlink("/proc/self/exe", vpath, SMALLBUFSZ) == -1);
+#endif
+
+  if (status == -1) {
+    dlog(
+      LOG_WARNING,
+      "Couldn't get volcano path. Needed buffer size: %u\n", vpathsz);
   }
 
+  struct passwd *pw = getpwuid(VOLCANO_DEFAULT_UID);
+  const char *homedir = pw->pw_dir;
+
+  // The defaults
+  config.kmap_file = calloc(SMALLBUFSZ, sizeof (char));
+  config.socket_file = calloc(SMALLBUFSZ, sizeof (char));
+  config.init_mode = calloc(SMALLBUFSZ, sizeof (char));
+  config.srv_data = calloc(SMALLBUFSZ, sizeof (char));
+  config.srv_exe = calloc(SMALLBUFSZ, sizeof (char));
+
+  sprintf(config.socket_file, "%s/.volcano.sock", homedir);
+  sprintf(config.init_mode, "%s", VOLCANO_DEFAULT_MODE);
+  sprintf(config.srv_data, "%s/../../www", vpath);
+  sprintf(config.srv_exe, "%s/../volcanosrv", vpath);
+
+  config.socket_uid = VOLCANO_DEFAULT_UID;
+  config.socket_gid = VOLCANO_DEFAULT_GID;
+  config.init_color = VOLCANO_DEFAULT_COLOR;
+  config.srv_port = VOLCANO_DEFAULT_PORT;
+  config.srv_enable = true;
+
+  if (rcfname == NULL) {
+    dlog(
+      LOG_WARNING,
+      "Config filename not provided. "
+      "The default values may result in errors.\n");
+  } else {
+    struct stat statbuf;
+    if (stat(rcfname, &statbuf) == 0) {
+      config_read(rcfname);
+    } else {
+      dlog(LOG_WARNING, "Config file not found: %s.\n", rcfname);
+    }
+  }
+
+  dlog(LOG_DEBUG, "kmap file:   %s\n", config.kmap_file);
+  dlog(LOG_DEBUG, "socket file: %s\n", config.socket_file);
+  dlog(LOG_DEBUG, "init mode:   %s\n", config.init_mode);
+  dlog(LOG_DEBUG, "srv data:    %s\n", config.srv_data);
+  dlog(LOG_DEBUG, "srv exe:    %s\n", config.srv_exe);
+  dlog(LOG_DEBUG, "socket UID: %d\n", config.socket_uid);
+  dlog(LOG_DEBUG, "socket GID: %d\n", config.socket_gid);
+  dlog(LOG_DEBUG, "init color:  #%06x\n", config.init_color);
+  dlog(LOG_DEBUG, "srv port:    %hu\n", config.srv_port);
+  dlog(LOG_DEBUG, "srv enable:  %s\n", config.srv_enable ? "true" : "false");
+}
+
+void config_read(const char *rcfname) {
   char buf[BUFSZ] = {0};
+  FILE *f = fopen(rcfname, "r");
   fread(buf, sizeof (char), BUFSZ, f);
+  fclose(f);
 
   char *tok = strtok(buf, "=");
 
@@ -257,7 +323,6 @@ void init_config(const char *rcfname) {
     tok = strtok(NULL, "\n");
 
     if (strcmp(key, "SOCKET_FILE") == 0) {
-      config.socket_file = calloc(strlen(tok) + 1, sizeof (char));
       sprintf(config.socket_file, "%s", tok);
 
     } else if (strcmp(key, "SOCKET_UID") == 0) {
@@ -267,11 +332,9 @@ void init_config(const char *rcfname) {
       config.socket_gid = atoi(tok);
 
     } else if (strcmp(key, "KMAP_FILE") == 0) {
-      config.kmap_file = calloc(strlen(tok) + 1, sizeof (char));
       sprintf(config.kmap_file, "%s", tok);
 
     } else if (strcmp(key, "INIT_MODE") == 0) {
-      config.init_mode = calloc(strlen(tok) + 1, sizeof (char));
       sprintf(config.init_mode, "%s", tok);
 
     } else if (strcmp(key, "INIT_COLOR") == 0) {
@@ -287,30 +350,17 @@ void init_config(const char *rcfname) {
       config.srv_port = atoi(tok);
 
     } else if (strcmp(key, "SRV_DATA") == 0) {
-      config.srv_data = calloc(strlen(tok) + 1, sizeof (char));
       sprintf(config.srv_data, "%s", tok);
 
     } else if (strcmp(key, "SRV_EXE") == 0) {
-      config.srv_exe = calloc(strlen(tok) + 1, sizeof (char));
       sprintf(config.srv_exe, "%s", tok);
 
     } else {
       dlog(LOG_WARNING, "Unknown config key: %s\n", key);
-
     }
 
     tok = strtok(NULL, "=");
   }
-
-  fclose(f);
-
-  dlog(LOG_DEBUG, "socket file: %s\n", config.socket_file);
-  dlog(LOG_DEBUG, "kmap file:   %s\n", config.kmap_file);
-  dlog(LOG_DEBUG, "init mode:   %s\n", config.init_mode);
-  dlog(LOG_DEBUG, "init color:  #%06x\n", config.init_color);
-  dlog(LOG_DEBUG, "srv enable:  %s\n", config.srv_enable ? "true" : "false");
-  dlog(LOG_DEBUG, "srv port:    %hu\n", config.srv_port);
-  dlog(LOG_DEBUG, "srv data:    %s\n", config.srv_data);
 }
 
 enum status_t parse_command(char *cmdbuf) {

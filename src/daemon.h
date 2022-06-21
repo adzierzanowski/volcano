@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +21,19 @@
 
 #include "fmt.h"
 #include "keyboard.h"
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#define VOLCANO_DEFAULT_UID 501
+#define VOLCANO_DEFAULT_GID 20
+#else
+#define VOLCANO_DEFAULT_UID 1000
+#define VOLCANO_DEFAULT_GID 1000
+#endif
+
+#define VOLCANO_DEFAULT_COLOR 0xffffff
+#define VOLCANO_DEFAULT_MODE "norm"
+#define VOLCANO_DEFAULT_PORT 65226
 
 
 struct config_t {
@@ -79,8 +93,10 @@ int hotplug_handler(
   struct libusb_device *dev,
   libusb_hotplug_event event,
   void *user_data);
-// Initializes the configuration based on a config file name
-void init_config(const char *rcfname);
+// Initializes the configuration
+void config_init(const char *rcfname);
+// Reads the config from filename
+void config_read(const char *rcfname);
 // Parses an incoming command and acts accordingly
 // Returns status of the action (`OK` on success, other status otherwise)
 enum status_t parse_command(char *cmdbuf);
