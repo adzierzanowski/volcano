@@ -61,8 +61,11 @@ void dlog(enum loglevel_t level, const char *fmt, ...) {
       if (f == NULL) {
         sprintf(self_name, "%d", pid);
       } else {
-        fread(self_name, sizeof (char), SMALLBUFSZ, f);
+        size_t nread = fread(self_name, sizeof (char), SMALLBUFSZ, f);
         fclose(f);
+
+        // Remove newline char
+        self_name[nread-1] = 0;
       }
 
   #else
