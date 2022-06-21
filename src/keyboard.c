@@ -1,5 +1,101 @@
 #include "keyboard.h"
 
+
+const struct kbd_key_t kcolor_keys[90] = {
+  { .name = "PLUS", .val = 0x776300 },
+  { .name = "DEL", .val = 0x4ca00 },
+  { .name = "A", .val = 0xd4c000 },
+  { .name = "E", .val = 0x9b8700 },
+  { .name = "INS", .val = 0x7d6900 },
+  { .name = "SL", .val = 0x412d00 },
+  { .name = "F11", .val = 0x1703001 },
+  { .name = "F8", .val = 0x2c1800 },
+  { .name = "8", .val = 0x6b5700 },
+  { .name = "G", .val = 0xe0cc00 },
+  { .name = "END", .val = 0x9b8700 },
+  { .name = "PD", .val = 0xb09c00D },
+  { .name = "RBRACKET", .val = 0x9e8a00 },
+  { .name = "Y", .val = 0xa49000 },
+  { .name = "COLON", .val = 0xefdb00 },
+  { .name = "PB", .val = 0x443000 },
+  { .name = "F9", .val = 0x2f1b00 },
+  { .name = "CAPS", .val = 0xd1bd00 },
+  { .name = "F10", .val = 0x1703000 },
+  { .name = "F", .val = 0xddc900 },
+  { .name = "9", .val = 0x6e5a00 },
+  { .name = "LBRACKET", .val = 0xb39f00 },
+  { .name = "D", .val = 0xdac600 },
+  { .name = "F12", .val = 0x1703002 },
+  { .name = "TAB", .val = 0x927e00 },
+  { .name = "F7", .val = 0x291500 },
+  { .name = "APOSTROPHE", .val = 0xd4c000 },
+  { .name = "S", .val = 0xd7c300 },
+  { .name = "ENTER", .val = 0x9b8700 },
+  { .name = "H", .val = 0xe3cf00 },
+  { .name = "7", .val = 0x685400 },
+  { .name = "MINUS", .val = 0x48200 },
+  { .name = "5", .val = 0x624e00 },
+  { .name = "Q", .val = 0x958100 },
+  { .name = "J", .val = 0xe6d200 },
+  { .name = "PU", .val = 0x836f00 },
+  { .name = "F5", .val = 0x230f00 },
+  { .name = "F1", .val = 0x170300 },
+  { .name = "MINUS", .val = 0x48200 },
+  { .name = "1", .val = 0x564200 },
+  { .name = "U", .val = 0xa79300 },
+  { .name = "L", .val = 0xecd800 },
+  { .name = "W", .val = 0x988400 },
+  { .name = "3", .val = 0x5c4800 },
+  { .name = "ESC", .val = 0x140000 },
+  { .name = "F3", .val = 0x1d0900 },
+  { .name = "BACKSLASH", .val = 0xb9a500 },
+  { .name = "PS", .val = 0x3e2a00 },
+  { .name = "K", .val = 0xe9d500 },
+  { .name = "P", .val = 0xb09c00 },
+  { .name = "4", .val = 0x5f4b00 },
+  { .name = "F4", .val = 0x200c00 },
+  { .name = "F6", .val = 0x261200 },
+  { .name = "HM", .val = 0x806c00 },
+  { .name = "6", .val = 0x655100 },
+  { .name = "I", .val = 0xaa9600 },
+  { .name = "R", .val = 0x9e8a00 },
+  { .name = "2", .val = 0x594500 },
+  { .name = "F2", .val = 0x1a0600 },
+  { .name = "T", .val = 0xa18d00 },
+  { .name = "O", .val = 0xad9900 },
+  { .name = "LSHIFT", .val = 0xecd800 },
+  { .name = "0", .val = 0x715d00 },
+  { .name = "TILDE", .val = 0x533f00 },
+  { .name = "BACKSPACE", .val = 0x7a6600 },
+  { .name = "X", .val = 0x1a0501 },
+  { .name = "UP", .val = 0xa79300 },
+  { .name = "C", .val = 0x1d0801 },
+  { .name = "Z", .val = 0x170201 },
+  { .name = "MENU", .val = 0x291401 },
+  { .name = "LEFT", .val = 0xecd800 },
+  { .name = "B", .val = 0x230e01 },
+  { .name = "DOWN", .val = 0xdac600 },
+  { .name = "GT", .val = 0xe0cc00 },
+  { .name = "RIGHT", .val = 0x9e8a00 },
+  { .name = "LCTRL", .val = 0xecd800 },
+  { .name = "RALT", .val = 0x9e8a00 },
+  { .name = "FN", .val = 0xddc900 },
+  { .name = "LT", .val = 0xecd800 },
+  { .name = "N", .val = 0x261101 },
+  { .name = "LALT", .val = 0xecd800 },
+  { .name = "RCTRL", .val = 0x9e8a00 },
+  { .name = "WIN", .val = 0x988400 },
+  { .name = "META", .val = 0x988400 },
+  { .name = "QMARK", .val = 0x958100 },
+  { .name = "SLASH", .val = 0x958100 },
+  { .name = "SPACE", .val = 0xd7c300 },
+  { .name = "V", .val = 0x200b01 },
+  { .name = "M", .val = 0x291401 },
+  { .name = "RSHIFT", .val = 0x9e8a00 },
+};
+
+const size_t keys_sz = sizeof kcolor_keys / sizeof kcolor_keys[0];
+
 bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh) {
   *ctx = NULL;
   *kbdh = NULL;
@@ -13,7 +109,7 @@ bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh) {
 
   *kbdh = libusb_open_device_with_vid_pid(*ctx, KBD_VID, KBD_PID);
   if (*kbdh == NULL) {
-    printerr("Error: Keyboard not found\n");
+    dlog(LOG_ERROR, "Keyboard not found.\n");
     return false;
   }
 
@@ -85,13 +181,13 @@ bool kbd_validate_response(uint8_t *sent, uint8_t *recv, size_t sz) {
   for (int i = 0; i < sz; i++) {
     if (i == 7) {
       if (recv[i] != 1) {
-        printerr("Response invalid (NACK)");
+        dlog(LOG_ERROR, "Response invalid (NACK)");
         return false;
       }
     } else {
       if ((uint8_t) sent[i] != (uint8_t) recv[i]) {
-        printerr("received data does not match\n");
-        printerr("i=%d sent=%d received=%d\n", i, sent[i], recv[i]);
+        dlog(LOG_ERROR, "Received data does not match.\n");
+        dlog(LOG_ERROR, "  i=%d sent=%d received=%d\n", i, sent[i], recv[i]);
         return false;
       }
     }
@@ -156,105 +252,11 @@ bool kbd_send_end(libusb_device_handle *kbdh) {
   return kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
 }
 
-const struct kbd_key_t keys[90] = {
-  { .name = "PLUS", .val = KEY_PLUS },
-  { .name = "DEL", .val = KEY_DEL },
-  { .name = "A", .val = KEY_A },
-  { .name = "E", .val = KEY_E },
-  { .name = "INS", .val = KEY_INS },
-  { .name = "SL", .val = KEY_SL },
-  { .name = "F11", .val = KEY_F11 },
-  { .name = "F8", .val = KEY_F8 },
-  { .name = "8", .val = KEY_8 },
-  { .name = "G", .val = KEY_G },
-  { .name = "END", .val = KEY_END },
-  { .name = "PD", .val = KEY_PD },
-  { .name = "RBRACKET", .val = KEY_RBRACKET },
-  { .name = "Y", .val = KEY_Y },
-  { .name = "COLON", .val = KEY_COLON },
-  { .name = "PB", .val = KEY_PB },
-  { .name = "F9", .val = KEY_F9 },
-  { .name = "CAPS", .val = KEY_CAPS },
-  { .name = "F10", .val = KEY_F10 },
-  { .name = "F", .val = KEY_F },
-  { .name = "9", .val = KEY_9 },
-  { .name = "LBRACKET", .val = KEY_LBRACKET },
-  { .name = "D", .val = KEY_D },
-  { .name = "F12", .val = KEY_F12 },
-  { .name = "TAB", .val = KEY_TAB },
-  { .name = "F7", .val = KEY_F7 },
-  { .name = "APOSTROPHE", .val = KEY_APOSTROPHE },
-  { .name = "S", .val = KEY_S },
-  { .name = "ENTER", .val = KEY_ENTER },
-  { .name = "H", .val = KEY_H },
-  { .name = "7", .val = KEY_7 },
-  { .name = "MINUS", .val = KEY_MINUS },
-  { .name = "5", .val = KEY_5 },
-  { .name = "Q", .val = KEY_Q },
-  { .name = "J", .val = KEY_J },
-  { .name = "PU", .val = KEY_PU },
-  { .name = "F5", .val = KEY_F5 },
-  { .name = "F1", .val = KEY_F1 },
-  { .name = "MINUS", .val = KEY_MINUS },
-  { .name = "1", .val = KEY_1 },
-  { .name = "U", .val = KEY_U },
-  { .name = "L", .val = KEY_L },
-  { .name = "W", .val = KEY_W },
-  { .name = "3", .val = KEY_3 },
-  { .name = "ESC", .val = KEY_ESC },
-  { .name = "F3", .val = KEY_F3 },
-  { .name = "BACKSLASH", .val = KEY_BACKSLASH },
-  { .name = "PS", .val = KEY_PS },
-  { .name = "K", .val = KEY_K },
-  { .name = "P", .val = KEY_P },
-  { .name = "4", .val = KEY_4 },
-  { .name = "F4", .val = KEY_F4 },
-  { .name = "F6", .val = KEY_F6 },
-  { .name = "HM", .val = KEY_HM },
-  { .name = "6", .val = KEY_6 },
-  { .name = "I", .val = KEY_I },
-  { .name = "R", .val = KEY_R },
-  { .name = "2", .val = KEY_2 },
-  { .name = "F2", .val = KEY_F2 },
-  { .name = "T", .val = KEY_T },
-  { .name = "O", .val = KEY_O },
-  { .name = "LSHIFT", .val = KEY_LSHIFT },
-  { .name = "0", .val = KEY_0 },
-  { .name = "TILDE", .val = KEY_TILDE },
-  { .name = "BACKSPACE", .val = KEY_BACKSPACE },
-  { .name = "X", .val = KEY_X },
-  { .name = "UP", .val = KEY_UP },
-  { .name = "C", .val = KEY_C },
-  { .name = "Z", .val = KEY_Z },
-  { .name = "MENU", .val = KEY_MENU },
-  { .name = "LEFT", .val = KEY_LEFT },
-  { .name = "B", .val = KEY_B },
-  { .name = "DOWN", .val = KEY_DOWN },
-  { .name = "GT", .val = KEY_GT },
-  { .name = "RIGHT", .val = KEY_RIGHT },
-  { .name = "LCTRL", .val = KEY_LCTRL },
-  { .name = "RALT", .val = KEY_RALT },
-  { .name = "FN", .val = KEY_FN },
-  { .name = "LT", .val = KEY_LT },
-  { .name = "N", .val = KEY_N },
-  { .name = "LALT", .val = KEY_LALT },
-  { .name = "RCTRL", .val = KEY_RCTRL },
-  { .name = "WIN", .val = KEY_WIN },
-  { .name = "META", .val = KEY_WIN },
-  { .name = "QMARK", .val = KEY_QMARK },
-  { .name = "SLASH", .val = KEY_QMARK },
-  { .name = "SPACE", .val = KEY_SPACE },
-  { .name = "V", .val = KEY_V },
-  { .name = "M", .val = KEY_M },
-  { .name = "RSHIFT", .val = KEY_RSHIFT }
-};
-
-const size_t keys_sz = sizeof keys / sizeof keys[0];
 
 const struct kbd_key_t *kbd_get_key(const char *name) {
   for (int i = 0; i < keys_sz; i++) {
-    if (strcmp(name, keys[i].name) == 0) {
-      return &keys[i];
+    if (strcmp(name, kcolor_keys[i].name) == 0) {
+      return &kcolor_keys[i];
     }
   }
   return NULL;

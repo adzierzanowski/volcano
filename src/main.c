@@ -165,12 +165,12 @@ int main(int argc, const char *argv[]) {
   if (command) {
     if (strcmp(command, "clear-m1") == 0) {
       for (int i = 0; i < keys_sz; i++) {
-        kbd_set_key_color(kbdh, keys[i].val, 0);
+        kbd_set_key_color(kbdh, kcolor_keys[i].val, 0);
       }
     } else if (strcmp(command, "clear") == 0) {
       kbd_set_color(kbdh, 0, 0, 0);
     } else {
-      printerr("Command not recognized\n");
+      dlog(LOG_ERROR, "Command not recognized\n");
     }
 
   } else if (set_color) {
@@ -182,7 +182,7 @@ int main(int argc, const char *argv[]) {
     if (key) {
       kbd_set_key_color(kbdh, key->val, color);
     } else {
-      printerr("Key %s not found\n", keyname);
+      dlog(LOG_ERROR, "Key %s not found\n", keyname);
     }
   } else if (mode) {
     kbd_set_mode(kbdh, kbd_get_mode(mode));
