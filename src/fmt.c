@@ -41,26 +41,36 @@ const char *loglevelstr(enum loglevel_t level) {
 }
 
 void dlog(enum loglevel_t level, const char *fmt, ...) {
+  static bool self_name_ready = false;
+  static char self_name[SMALLBUFSZ] = {0};
+
   if (level <= log_level) {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
 
     pid_t pid = getpid();
-    char self_name[SMALLBUFSZ] = {0};
 
-  #ifdef __APPLE__
-    proc_name(pid, self_name, SMALLBUFSZ);
+    if (!self_name_ready) {
+  #if defined(__APPLE__)
+      proc_name(pid, self_name, SMALLBUFSZ);
+
+  #elif defined(__linux__)
+      char procfile[SMALLBUFSZ] = {0};
+      sprintf(procfile, "/proc/%d/comm", pid);
+      FILE *f = fopen(procfile, "r");
+      if (f == NULL) {
+        sprintf(self_name, "%d", pid);
+      } else {
+        fread(self_name, sizeof (char), SMALLBUFSZ, f);
+        fclose(f);
+      }
+
   #else
-    char procfile[SMALLBUFSZ] = {0};
-    sprintf(procfile, "/proc/%d/comm", pid);
-    FILE *f = fopen(procfile, "r");
-    if (f == NULL) {
       sprintf(self_name, "%d", pid);
-    } else {
-      fread(self_name, sizeof (char), SMALLBUFSZ, f);
-      fclose(f);
-    }
+
   #endif
+      self_name_ready = true;
+    }
 
     va_list args;
     va_start(args, fmt);
