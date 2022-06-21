@@ -51,9 +51,15 @@ void dlog(enum loglevel_t level, const char *fmt, ...) {
   #ifdef __APPLE__
     proc_name(pid, self_name, SMALLBUFSZ);
   #else
-    FILE *f = fopen("/proc/%d/comm", "r");
-    fread(self_name, sizeof (char), SMALLBUFSZ, f);
-    fclose(f);
+    char procfile[SMALLBUFSZ] = {0};
+    sprintf(procfile, "/proc/%d/comm", pid);
+    FILE *f = fopen(procfile, "r");
+    if (f == NULL) {
+      sprintf(self_name, "%d", pid);
+    } else {
+      fread(self_name, sizeof (char), SMALLBUFSZ, f);
+      fclose(f);
+    }
   #endif
 
     va_list args;
