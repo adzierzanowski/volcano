@@ -40,12 +40,8 @@ const getColor = () => {
 };
 
 const handleKey = k => {
-  const mode = document.getElementById('keyboard-mode')['keyboard-mode'].value;
-
-  if (mode === 'color') {
-    const [r, g, b] = getColor();
-    sendCmd(`/kcolor/${k}/${r}/${g}/${b}/`);
-  }
+  const [r, g, b] = getColor();
+  sendCmd(`/kcolor/${k}/${r}/${g}/${b}/`);
 };
 
 const updateMiscSettings = () => {

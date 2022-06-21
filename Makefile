@@ -18,7 +18,7 @@ BUILD = build
 BIN = bin
 
 .PHONY: all
-all: volcanod volcano volcanosrv volcano-info
+all: volcanod volcano volcanosrv volcanoctl
 
 volcanod: $(addprefix $(BUILD)/, fmt.o daemon.o keyboard.o)
 	@-mkdir -p $(BIN)
@@ -31,6 +31,10 @@ volcanosrv: $(addprefix $(BUILD)/, fmt.o srv.o keyboard.o)
 volcano: $(addprefix $(BUILD)/, fmt.o main.o keyboard.o)
 	@-mkdir -p $(BIN)
 	$(CC) $^ $(CFLAGS) -o $(BIN)/$@
+
+volcanoctl:
+	@-mkdir -p $(BIN)
+	cp tools/volcanoctl $(BIN)/volcanoctl
 
 volcano-info: $(addprefix $(BUILD)/, info.o)
 	@-mkdir -p $(BIN)

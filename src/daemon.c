@@ -77,7 +77,9 @@ int main(int argc, const char *argv[]) {
       char srv_socket[SMALLBUFSZ] = {0};
       sprintf(srv_socket, "%s", config.socket_file);
 
-      int err = execl(config.srv_exe, "volcanosrv", srv_port, srv_data, srv_socket, (char *)0);
+      int err = execl(
+        config.srv_exe, "volcanosrv", srv_port, srv_data, srv_socket, NULL);
+
       if (err) {
         dlog(LOG_ERROR, "execl failed: %s\n", strerror(errno));
         exit(1);
@@ -170,7 +172,6 @@ bool kbd_claim() {
 }
 
 bool kbd_release() {
-  // TODO: kbd_release status is LIBUSB_LOG_ERROR_NOT_FOUND but it seems to work ok
   if (libusb_release_interface(kbdh, CTL_INTERFACE)) return false;
   if (libusb_attach_kernel_driver(kbdh, CTL_INTERFACE)) return false;
   return true;
@@ -195,7 +196,10 @@ int create_socket() {
     exit(1);
   }
 
-  if (bind(s, (struct sockaddr *) &addr, strlen(addr.sun_path) + sizeof (addr.sun_family) + 1) == -1) {
+  size_t addrsz = strlen(addr.sun_path) + sizeof (addr.sun_family) + 1;
+
+  int status = bind(s, (struct sockaddr *) &addr, addrsz);
+  if (status != 0) {
     dlog(LOG_ERROR, "Failed to bind to the socket.\n");
     exit(1);
   }
@@ -424,13 +428,18 @@ enum status_t parse_command(char *cmdbuf) {
       }
     }
 
-    dlog(LOG_INFO, "Setting color to RGB(%d, %d, %d) HEX(#%02x%02x%02x).\n", r, g, b, r, g, b);
+    dlog(
+      LOG_INFO,
+      "Setting color to RGB(%d, %d, %d) HEX(#%02x%02x%02x).\n",
+      r, g, b, r, g, b);
+
     if (!kbd_claim()) return ERR_KBD_CLAIM;
     if (!kbd_set_color(kbdh, r, g, b)) {
       kbd_release();
       return ERR_KBD_COLOR;
     }
     if (!kbd_release()) return ERR_KBD_RELEASE;
+
     return OK;
 
   } else if (strcmp(tok, "kcolor") == 0) {

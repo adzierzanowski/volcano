@@ -14,6 +14,7 @@ static void sigint_handler(int arg) {
   exit(0);
 }
 
+
 int main(int argc, const char *argv[]) {
   set_loglevel(LOG_DEBUG);
 
@@ -22,7 +23,9 @@ int main(int argc, const char *argv[]) {
   }
 
   if (argc < 4) {
-    dlog(LOG_ERROR, "Volcano server needs 3 arguments: PORT, DATA_PATH, SOCKET_PATH.\n");
+    dlog(
+      LOG_ERROR,
+      "Volcano server needs 3 arguments: PORT, DATA_PATH, SOCKET_PATH.\n");
     exit(1);
   }
 
@@ -71,9 +74,11 @@ int main(int argc, const char *argv[]) {
     char *body = strtok(NULL, "");
     dlog(LOG_DEBUG, "[Body] %s\n", body);
 
-    char *response = handle_request(method, path, body);
+    size_t response_size = 0;
+    char *response = handle_request(method, path, body, &response_size);
+
     dlog(LOG_INFO, "Sending response:\n\n%s\n\n", response);
-    send(sock, response, strlen(response), 0);
+    send(sock, response, response_size, 0);
     close(sock);
     free(response);
   }
@@ -114,26 +119,47 @@ const char *http_get_mimetype(const char *path) {
   return mime;
 }
 
-char *http_make_api_response(int status, const char *json_msg) {
+char *http_make_api_response(int status, const char *json_msg, size_t *ressz) {
   char body[SMALLBUFSZ] = {0};
-  sprintf(body, "{\"status\": \"%s\", \"msg\": \"%s\"}", status == 200 ? "ok" : "error", json_msg);
-  return http_make_response(status, "application/json", (uint8_t *) body);
+  sprintf(
+    body,
+    "{\"status\": \"%s\", \"msg\": \"%s\"}",
+    status == 200 ? "ok" : "error", json_msg);
+
+  return http_make_response(
+    status, "application/json", (uint8_t *) body, NULL, ressz);
 }
 
-char *http_make_response(int status, const char *content_type, uint8_t *body) {
+char *http_make_response(
+    int status,
+    const char
+    *content_type,
+    uint8_t *body,
+    size_t *bodysz,
+    size_t *ressz) {
+  const size_t body_size = bodysz == NULL ? strlen((char *) body) : *bodysz;
+
   char *res = calloc(BUFSZ, sizeof (char));
-  sprintf(res,
+  char header[SMALLBUFSZ] = {0};
+
+  sprintf(header,
     "HTTP/1.1 %d %s\r\n"
     "Content-Type: %s\r\n"
     "Content-Length: %zu\r\n"
-    "Server: volcanosrv/%s\r\n\r\n"
-    "%s",
+    "Server: volcanosrv/%s\r\n\r\n",
     status, http_status_str(status),
     content_type,
-    strlen((char *) body),
-    VERSION,
-    body
+    body_size,
+    VERSION
   );
+
+  size_t hlen = strlen(header);
+  *ressz = hlen + body_size;
+
+  for (int i= 0; i < *ressz; i++) {
+    res[i] = i < hlen ? header[i] : body[i - hlen];
+  }
+
   return res;
 }
 
@@ -154,17 +180,18 @@ const char *http_status_str(int status) {
   }
 }
 
-char *handle_request(char *method, char *path, char *body) {
+char *handle_request(char *method, char *path, char *body, size_t *ressz) {
   if (strcmp(method, "POST") == 0) {
-    return handle_request_post(path, body);
+    return handle_request_post(path, body, ressz);
   } else if (strcmp(method, "GET") == 0) {
-    return handle_request_get(path);
+    return handle_request_get(path, ressz);
   } else {
-    return http_make_response(405, "text/plain", (uint8_t *) http_status_str(405));
+    return http_make_response(
+      405, "text/plain", (uint8_t *) http_status_str(405), NULL, ressz);
   }
 }
 
-char *handle_request_get(char *path) {
+char *handle_request_get(char *path, size_t *ressz) {
   dlog(LOG_DEBUG, "Handling GET request\n");
   if (strmatch(path,
     "/", "/kmap", "/favicon.ico", "/main.css", "/index.js", "/kmap.js",
@@ -185,23 +212,25 @@ char *handle_request_get(char *path) {
 
     FILE *f = fopen(fpath, "rb");
     if (f == NULL) {
-      return http_make_response(404, "text/plain", (uint8_t *) http_status_str(404));
+      return http_make_response(
+        404, "text/plain", (uint8_t *) http_status_str(404), NULL, ressz);
     }
     // Subtracting some bytes to silence GCC warning about sprintfing
     // potentially larger buffer than dst size
     char fbuf[BUFSZ-256] = {0};
-    fread(fbuf, sizeof (uint8_t), BUFSZ-256, f);
+    size_t readsz = fread(fbuf, sizeof (uint8_t), BUFSZ-256, f);
     fclose(f);
 
-    // TODO: fix favicon response
-    return http_make_response(200, http_get_mimetype(fpath), (uint8_t *) fbuf);
+    return http_make_response(
+      200, http_get_mimetype(fpath), (uint8_t *) fbuf, &readsz, ressz);
 
   } else {
-    return http_make_response(418, "text/plain", (uint8_t *) http_status_str(418));
+    return http_make_response(
+      418, "text/plain", (uint8_t *) http_status_str(418), NULL, ressz);
   }
 }
 
-char *handle_request_post(char *path, char *body) {
+char *handle_request_post(char *path, char *body, size_t *ressz) {
   size_t spathsz = 0;
   char **spath = strsplit(path, &spathsz, "/");
 
@@ -210,7 +239,7 @@ char *handle_request_post(char *path, char *body) {
     dlog(LOG_DEBUG, "  %s\n", spath[i]);
   }
 
-  char *response = dispatch_cmd(spath, spathsz, body);
+  char *response = dispatch_cmd(spath, spathsz, body, ressz);
   strsplit_free(spath, spathsz);
 
   return response;
@@ -240,27 +269,29 @@ bool daemon_send(char *rxbuf, const char *fmt, ...) {
   return strcmp(rxbuf, "OK") == 0;
 }
 
-char *dispatch_cmd(char **spath, size_t spathsz, char *body) {
+char *dispatch_cmd(char **spath, size_t spathsz, char *body, size_t *ressz) {
   char rxbuf[SMALLBUFSZ] = {0};
 
   if (spathsz == 0) {
-    return http_make_api_response(400, "Empty command.");
+    return http_make_api_response(400, "Empty command.", ressz);
   }
 
   if (strcmp(spath[0], "color") == 0) {
     if (spathsz != 4) {
-      return http_make_api_response(400, "color command needs 3 arguments.");
+      return http_make_api_response(
+        400, "color command needs 3 arguments.", ressz);
     }
 
     int r = atoi(spath[1]);
     int g = atoi(spath[2]);
     int b = atoi(spath[3]);
     int status = daemon_send(rxbuf, "color %d %d %d", r, g, b) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "kcolor") == 0) {
     if (spathsz != 5) {
-      return http_make_api_response(400, "color command needs 4 arguments.");
+      return http_make_api_response(
+        400, "color command needs 4 arguments.", ressz);
     }
 
     char *key = spath[1];
@@ -268,64 +299,71 @@ char *dispatch_cmd(char **spath, size_t spathsz, char *body) {
     int g = atoi(spath[3]);
     int b = atoi(spath[4]);
 
-    int status = daemon_send(rxbuf, "kcolor %s %d %d %d", key, r, g, b) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    int status = daemon_send(rxbuf, "kcolor %s %d %d %d", key, r, g, b)
+      ? 200 : 400;
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "mode") == 0) {
     if (spathsz != 2) {
-      return http_make_api_response(400, "mode command needs exactly one argument.");
+      return http_make_api_response(
+        400, "mode command needs exactly one argument.", ressz);
     }
 
     int status = daemon_send(rxbuf, "mode %s", spath[1]) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "speed") == 0) {
     if (spathsz != 2) {
-      return http_make_api_response(400, "speed command needs exactly one argument.");
+      return http_make_api_response(
+        400, "speed command needs exactly one argument.", ressz);
     }
 
     int level = atoi(spath[1]);
     int status = daemon_send(rxbuf, "speed %d", level) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "brightness") == 0) {
     if (spathsz != 2) {
-      return http_make_api_response(400, "brightness command needs exactly one argument.");
+      return http_make_api_response(
+        400, "brightness command needs exactly one argument.", ressz);
     }
 
     int level = atoi(spath[1]);
     int status = daemon_send(rxbuf, "brightness %d", level) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "dir") == 0) {
     if (spathsz != 2) {
-      return http_make_api_response(400, "dir command needs exactly one argument.");
+      return http_make_api_response(
+        400, "dir command needs exactly one argument.", ressz);
     }
 
     int dir = atoi(spath[1]);
     int status = daemon_send(rxbuf, "dir %d", dir) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "rainbow") == 0) {
     if (spathsz != 2) {
-      return http_make_api_response(400, "rainbow command needs exactly one argument.");
+      return http_make_api_response(
+        400, "rainbow command needs exactly one argument.", ressz);
     }
 
     int status = daemon_send(rxbuf, "rainbow %s", spath[1]) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "rate") == 0) {
     if (spathsz != 2) {
-      return http_make_api_response(400, "rate command needs exactly 2 arguments.");
+      return http_make_api_response(
+        400, "rate command needs exactly 2 arguments.", ressz);
     }
 
     int rate = atoi(spath[1]);
     int status = daemon_send(rxbuf, "rate %d", rate) ? 200 : 400;
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
 
   } else if (strcmp(spath[0], "kmap") == 0) {
     if (body[0] != '[') {
-      return http_make_api_response(400, "Bad kmap format.");
+      return http_make_api_response(400, "Bad kmap format.", ressz);
     }
 
     char msg[SMALLBUFSZ] = {0};
@@ -341,8 +379,8 @@ char *dispatch_cmd(char **spath, size_t spathsz, char *body) {
 
     int status = daemon_send(rxbuf, "kmap %s", msg) ? 200 : 400;
 
-    return http_make_api_response(status, rxbuf);
+    return http_make_api_response(status, rxbuf, ressz);
   }
 
-  return http_make_api_response(400, "Unknown command.");
+  return http_make_api_response(400, "Unknown command.", ressz);
 }

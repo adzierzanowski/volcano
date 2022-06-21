@@ -11,3 +11,4 @@ volcanod.plist
 test/
 bin/
 build/
+.env
