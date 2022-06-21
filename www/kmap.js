@@ -14,23 +14,27 @@ const mapping = {};
 const updateRemappedKeyboard = () => {
   const remapped = document.getElementById('keyboard-remapped');
 
-  remapped.querySelectorAll('button').forEach(k => {
-    k.classList.remove('remapped');
+  remapped.querySelectorAll('button').forEach(btn => {
+    btn.classList.remove('remapped');
+    const kname = btn.getAttribute('data-kname');
+    btn.innerText = keys[kname]?.label ?? kname;
   });
+
 
   for (let key in mapping) {
     const remappedKey = remapped.querySelector(`button[data-kname=${key}]`);
-    remappedKey.innerText = keys[mapping[key]].label ?? mapping[key];
+    remappedKey.innerText = keys?.[mapping[key]]?.label ?? mapping[key];
     remappedKey.classList.add('remapped');
   }
 };
 
 const handleKmapKey = kname => {
-
   console.log(kname, keys[kname]);
   const remap = prompt(`Remap ${kname} to`);
-  if (remap) {
+  if (KMAP_KEYNAMES.includes(remap) || !isNaN(parseInt(remap))) {
     mapping[kname] = remap;
+  } else {
+    alert('Bad key name.');
   }
   updateRemappedKeyboard();
 };
@@ -60,8 +64,13 @@ const generateKmap = () => {
   for (let kname of KMAP_KEYNAMES) {
     if (kname in mapping) {
       const key = keys[mapping[kname]];
-      kmap.push(key.code);
-      mkmap.push(key?.modal ? 1 : 2);
+      if (key) {
+        kmap.push(key.code);
+        mkmap.push(key?.modal ? 1 : 2);
+      } else {
+        kmap.push(parseInt(mapping[kname]));
+        mkmap.push(2);
+      }
     } else {
       const key = keys[kname];
       kmap.push(parseInt(key.code));
@@ -72,6 +81,10 @@ const generateKmap = () => {
   return [...kmap, ...mkmap];
 };
 
+
+document.getElementById('btn-help').addEventListener('click', e => {
+  document.getElementById('help').classList.toggle('open');
+});
 
 document.getElementById('btn-save').addEventListener('click', e => {
   const kmap = generateKmap();
@@ -94,3 +107,5 @@ document.getElementById('btn-upload').addEventListener('click', e => {
     headers: { 'Content-Type': 'application/json' }
   }).then(res => console.log(res));
 });
+
+document.getElementById('keynames').innerHTML = KMAP_KEYNAMES.map(kname => `<div class="keyname">${kname}</div>`).join(' ');

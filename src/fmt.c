@@ -3,7 +3,8 @@
 #define RED "\x1b[38;5;1m"
 #define END "\x1b[0m"
 
-static enum loglevel_t _loglevel = LOG_DEBUG;
+static enum loglevel_t log_level = LOG_DEBUG;
+static bool log_colored = false;
 
 void printerr(const char *fmt, ...) {
   va_list args;
@@ -27,43 +28,65 @@ void print64(uint8_t *buf) {
   }
 }
 
-static const char *loglevelstr(enum loglevel_t level) {
+const char *loglevelstr(enum loglevel_t level) {
   switch (level) {
+    case LOG_ALWAYS:  return "     ";
     case LOG_ERROR:   return "ERROR";
     case LOG_WARNING: return "WARN ";
     case LOG_INFO:    return "INFO ";
     case LOG_DEBUG:   return "DEBUG";
+    case LOG_SILLY:   return "SILLY";
   }
   return "NONE ";
 }
 
 void dlog(enum loglevel_t level, const char *fmt, ...) {
-  if (level <= _loglevel) {
+  if (level <= log_level) {
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
 
     pid_t pid = getpid();
+    char self_name[SMALLBUFSZ] = {0};
+
+  #ifdef __APPLE__
+    proc_name(pid, self_name, SMALLBUFSZ);
+  #else
+    FILE *f = fopen("/proc/%d/comm", "r");
+    fread(self_name, sizeof (char), SMALLBUFSZ, f);
+    fclose(f);
+  #endif
 
     va_list args;
     va_start(args, fmt);
+    if (log_colored) {
+      fprintf(stderr, "\x1b[38;5;%dm", pid % 7 + 1);
+    }
+
     fprintf(
       stderr,
-      "%d-%02d-%02d %02d:%02d:%02d %-6d %-10s ",
+      "%d-%02d-%02d %02d:%02d:%02d %-12s %-7s ",
       tm.tm_year + 1900,
       tm.tm_mon+1,
       tm.tm_mday,
       tm.tm_hour,
       tm.tm_min,
       tm.tm_sec,
-      pid,
+      self_name,
       loglevelstr(level));
     vfprintf(stderr, fmt, args);
     va_end(args);
+    if (log_colored) {
+      fprintf(stderr, "\x1b[0m");
+    }
   }
 }
 
 void set_loglevel(enum loglevel_t level) {
-  _loglevel = level;
+  log_level = level;
+}
+
+void set_logcolor(bool do_color) {
+  log_colored = do_color;
 }
 
 bool strmatch(char *str, ...) {

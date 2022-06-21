@@ -1,6 +1,8 @@
 #include "daemon.h"
 
 
+static struct config_t *cfg;
+
 // A flag which is being set on hotplug and is used in the main routine
 static bool kbd_hotplugged = false;
 
@@ -29,29 +31,47 @@ static bool remap(const char *fname) {
 }
 
 // Sends initial configuration commands to the keyboard when hotplugged
-static void on_hotplug() {
+static void on_hotplug(void) {
   if (kbdh) {
     kbd_claim();
-    dlog(LOG_INFO, "Hotplug: Remapping keys.\n");
-    remap(config.kmap_file);
-    dlog(LOG_INFO, "Hotplug: Setting initial mode to %s.\n", config.init_mode);
-    enum kbd_mode_t mode = kbd_get_mode(config.init_mode);
+    dlog(LOG_INFO, "[Hotplug] Remapping keys.\n");
+    remap(cfg->kmap_file);
+    dlog(LOG_INFO, "[Hotplug] Setting initial mode to %s.\n", cfg->init_mode);
+    enum kbd_mode_t mode = kbd_get_mode(cfg->init_mode);
     kbd_set_mode(kbdh, mode);
     kbd_release();
     kbd_claim();
     dlog(LOG_INFO,
-      "Hotplug: Setting initial color to #%06x.\n", config.init_color);
+      "[Hotplug] Setting initial color to #%06x.\n", cfg->init_color);
     kbd_set_color(
-      kbdh, config.init_color >> 16, config.init_color >> 8, config.init_color);
+      kbdh, cfg->init_color >> 16, cfg->init_color >> 8, cfg->init_color);
     kbd_release();
   } else {
-    dlog(LOG_ERROR, "Keyboard has been hotplugged but the keyboard handle is NULL.\n");
+    dlog(
+      LOG_ERROR,
+      "[Hotplug] "
+      "Keyboard has been hotplugged but the keyboard handle is NULL.\n");
   }
 }
 
+static void daemon_on_exit(void) {
+  if (fexists(cfg->socket_file)) {
+    dlog(LOG_DEBUG, "[Exit] Removing socket file.\n");
+    remove(cfg->socket_file);
+  }
+}
+
+static void sigint_handler(int sig) {
+  dlog(LOG_DEBUG, "[Exit] SIGINT\n");
+  exit(0);
+}
 
 int main(int argc, const char *argv[]) {
+  atexit(daemon_on_exit);
+  signal(SIGINT, sigint_handler);
   set_loglevel(LOG_DEBUG);
+
+  cfg = config_get();
 
   dlog(LOG_INFO, "\n");
   dlog(LOG_INFO, "Starting volcanod\n");
@@ -63,27 +83,15 @@ int main(int argc, const char *argv[]) {
     dlog(LOG_DEBUG, "argv[%d]=%s\n", i, argv[i]);
   }
 
-  if (argc < 2) {
-    config_init(NULL);
-  } else {
-    config_init(argv[1]);
-  }
+  const char *cfg_fname = argc < 2 ? NULL : argv[1];
+  config_init(cfg_fname);
 
-  if (config.srv_enable) {
+  if (cfg->srv_enable) {
     pid_t pid = fork();
 
     if (pid == 0) {
       dlog(LOG_INFO, "Creating a child server.\n");
-
-      char srv_port[6] = {0};
-      sprintf(srv_port, "%hu", config.srv_port);
-      char srv_data[SMALLBUFSZ] = {0};
-      sprintf(srv_data, "%s", config.srv_data);
-      char srv_socket[SMALLBUFSZ] = {0};
-      sprintf(srv_socket, "%s", config.socket_file);
-
-      int err = execl(
-        config.srv_exe, "volcanosrv", srv_port, srv_data, srv_socket, NULL);
+      int err = execl(cfg->srv_exe, "volcanosrv", cfg_fname, NULL);
 
       if (err) {
         dlog(LOG_ERROR, "execl failed: %s\n", strerror(errno));
@@ -103,10 +111,10 @@ int main(int argc, const char *argv[]) {
 }
 
 int daemon_main(int argc, const char *argv[]) {
+  dlog(LOG_ALWAYS, "volcanod version %s\n", VERSION);
+
   libusb_init(&ctx);
   libusb_hotplug_callback_handle cbhandle;
-
-  dlog(LOG_INFO, "volcanod version %s\n", VERSION);
 
   dlog(LOG_DEBUG, "Attempting to register hotplug callback.\n");
   int status = libusb_hotplug_register_callback(
@@ -127,7 +135,7 @@ int daemon_main(int argc, const char *argv[]) {
 
   if (!kbdh) {
     kbdh = libusb_open_device_with_vid_pid(ctx, KBD_VID, KBD_PID);
-    dlog(LOG_INFO, "Initial keyboard connection: %p\n", kbdh);
+    dlog(LOG_DEBUG, "Initial keyboard connection: %p\n", kbdh);
     if (!kbdh) {
       dlog(LOG_WARNING, "Failed to connect to the keyboard.\n");
     }
@@ -136,7 +144,7 @@ int daemon_main(int argc, const char *argv[]) {
   on_hotplug();
 
   int s = create_socket();
-  dlog(LOG_INFO, "Socket created: fd=%d\n", s);
+  dlog(LOG_DEBUG, "Socket created: fd=%d\n", s);
 
   for (;;) {
     libusb_handle_events_timeout_completed(ctx, &timeout, NULL);
@@ -185,14 +193,12 @@ bool kbd_release() {
 }
 
 int create_socket() {
-  struct stat statbuf;
-  int res = stat(config.socket_file, &statbuf);
-  if (res == 0) {
-    remove(config.socket_file);
+  if (fexists(cfg->socket_file)) {
+    remove(cfg->socket_file);
   }
 
   addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, config.socket_file);
+  strcpy(addr.sun_path, cfg->socket_file);
 
   int s = socket(AF_UNIX, SOCK_STREAM, 0);
 
@@ -211,9 +217,9 @@ int create_socket() {
     exit(1);
   }
 
-  dlog(LOG_INFO, "Setting permissions to the socket file.\n");
-  chmod(config.socket_file, S_IRWXG | S_IRWXO | S_IRWXU);
-  chown(config.socket_file, config.socket_uid, config.socket_gid);
+  dlog(LOG_DEBUG, "Setting permissions to the socket file.\n");
+  chmod(cfg->socket_file, S_IRWXG | S_IRWXO | S_IRWXU);
+  chown(cfg->socket_file, cfg->socket_uid, cfg->socket_gid);
 
   if (listen(s, 5) == -1) {
     dlog(LOG_ERROR, "Failed to listen.\n");
@@ -243,150 +249,6 @@ int hotplug_handler(
   return 0;
 }
 
-static void droplastslash(char *buf) {
-  int last_slash = -1;
-  for (int i = 0; i < strlen(buf); i++) {
-    if (buf[i] == '/') {
-      last_slash = i;
-    }
-  }
-
-  if (last_slash > -1) {
-    buf[last_slash] = 0;
-  }
-}
-
-void config_init(const char *rcfname) {
-  dlog(LOG_INFO, "Initializing config\n");
-  dlog(LOG_DEBUG, "Config file path: %s\n", rcfname);
-
-  // Path to the volcano executable
-  // Note that argv[0] may contain anything that the parent process put there
-  // so we must use OS-specific methods.
-  char vpath[SMALLBUFSZ] = {0};
-  int status = -1;
-  uint32_t vpathsz = SMALLBUFSZ;
-
-#if defined(__APPLE__)
-  status = _NSGetExecutablePath(vpath, &vpathsz);
-#elif defined(__linux__)
-  status = readlink("/proc/self/exe", vpath, vpathsz);
-#endif
-
-  if (status == -1) {
-    dlog(
-      LOG_WARNING,
-      "Couldn't get volcano path. Needed buffer size (if on macOS): %u\n", vpathsz);
-  }
-
-  struct passwd *pw = getpwuid(VOLCANO_DEFAULT_UID);
-  const char *homedir = pw->pw_dir;
-
-  // The defaults
-  config.kmap_file = calloc(SMALLBUFSZ, sizeof (char));
-  config.socket_file = calloc(SMALLBUFSZ, sizeof (char));
-  config.init_mode = calloc(SMALLBUFSZ, sizeof (char));
-  config.srv_data = calloc(SMALLBUFSZ, sizeof (char));
-  config.srv_exe = calloc(SMALLBUFSZ, sizeof (char));
-
-  sprintf(config.socket_file, "%s/.volcano.sock", homedir);
-  sprintf(config.init_mode, "%s", VOLCANO_DEFAULT_MODE);
-
-  char pathbuf[SMALLBUFSZ] = {0};
-  strcpy(pathbuf, vpath);
-  droplastslash(pathbuf);
-  droplastslash(pathbuf);
-  sprintf(config.srv_data, "%s/www", pathbuf);
-
-  strcpy(pathbuf, vpath);
-  droplastslash(pathbuf);
-  sprintf(config.srv_exe, "%s/volcanosrv", pathbuf);
-
-  config.socket_uid = VOLCANO_DEFAULT_UID;
-  config.socket_gid = VOLCANO_DEFAULT_GID;
-  config.init_color = VOLCANO_DEFAULT_COLOR;
-  config.srv_port = VOLCANO_DEFAULT_PORT;
-  config.srv_enable = true;
-
-  if (rcfname == NULL) {
-    dlog(
-      LOG_WARNING,
-      "Config filename not provided. "
-      "The default values may result in errors.\n");
-  } else {
-    struct stat statbuf;
-    if (stat(rcfname, &statbuf) == 0) {
-      config_read(rcfname);
-    } else {
-      dlog(LOG_WARNING, "Config file not found: %s.\n", rcfname);
-    }
-  }
-
-  dlog(LOG_DEBUG, "kmap file:   %s\n", config.kmap_file);
-  dlog(LOG_DEBUG, "socket file: %s\n", config.socket_file);
-  dlog(LOG_DEBUG, "init mode:   %s\n", config.init_mode);
-  dlog(LOG_DEBUG, "srv data:    %s\n", config.srv_data);
-  dlog(LOG_DEBUG, "srv exe:    %s\n", config.srv_exe);
-  dlog(LOG_DEBUG, "socket UID: %d\n", config.socket_uid);
-  dlog(LOG_DEBUG, "socket GID: %d\n", config.socket_gid);
-  dlog(LOG_DEBUG, "init color:  #%06x\n", config.init_color);
-  dlog(LOG_DEBUG, "srv port:    %hu\n", config.srv_port);
-  dlog(LOG_DEBUG, "srv enable:  %s\n", config.srv_enable ? "true" : "false");
-}
-
-void config_read(const char *rcfname) {
-  char buf[BUFSZ] = {0};
-  FILE *f = fopen(rcfname, "r");
-  fread(buf, sizeof (char), BUFSZ, f);
-  fclose(f);
-
-  char *tok = strtok(buf, "=");
-
-  while (tok != NULL) {
-    char *key = tok;
-    tok = strtok(NULL, "\n");
-
-    if (strcmp(key, "SOCKET_FILE") == 0) {
-      sprintf(config.socket_file, "%s", tok);
-
-    } else if (strcmp(key, "SOCKET_UID") == 0) {
-      config.socket_uid = atoi(tok);
-
-    } else if (strcmp(key, "SOCKET_GID") == 0) {
-      config.socket_gid = atoi(tok);
-
-    } else if (strcmp(key, "KMAP_FILE") == 0) {
-      sprintf(config.kmap_file, "%s", tok);
-
-    } else if (strcmp(key, "INIT_MODE") == 0) {
-      sprintf(config.init_mode, "%s", tok);
-
-    } else if (strcmp(key, "INIT_COLOR") == 0) {
-      config.init_color = strtol(tok, NULL, 16);
-
-    } else if (strcmp(key, "LOGLEVEL") == 0) {
-      set_loglevel(atoi(tok));
-
-    } else if (strcmp(key, "SRV_ENABLE") == 0) {
-      config.srv_enable = atoi(tok);
-
-    } else if (strcmp(key, "SRV_PORT") == 0) {
-      config.srv_port = atoi(tok);
-
-    } else if (strcmp(key, "SRV_DATA") == 0) {
-      sprintf(config.srv_data, "%s", tok);
-
-    } else if (strcmp(key, "SRV_EXE") == 0) {
-      sprintf(config.srv_exe, "%s", tok);
-
-    } else {
-      dlog(LOG_WARNING, "Unknown config key: %s\n", key);
-    }
-
-    tok = strtok(NULL, "=");
-  }
-}
-
 enum status_t parse_command(char *cmdbuf) {
   dlog(LOG_DEBUG, "Parsing command\n");
   const char *delim = " \n";
@@ -404,7 +266,7 @@ enum status_t parse_command(char *cmdbuf) {
   } else if (strcmp(tok, "fkmap") == 0) {
     tok = strtok(NULL, delim);
 
-    const char *kmap_file = config.kmap_file;
+    const char *kmap_file = cfg->kmap_file;
 
     if (tok != NULL) {
       kmap_file = tok;

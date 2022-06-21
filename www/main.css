@@ -158,3 +158,30 @@ footer {
 #misc-section {
   width: 25%;
 }
+
+#help  {
+  display: none;
+  width: 50%;
+  margin: 20px auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+
+#help.open {
+  display: block;
+}
+
+#keynames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px;
+}
+
+.keyname {
+  display: inline-block;
+  border: 1px solid #ddd;
+  background-color: #eee;
+  border-radius: 4px;
+  padding: 2px 10px;
+}

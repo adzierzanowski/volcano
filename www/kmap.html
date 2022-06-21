@@ -33,9 +33,22 @@
     <div id="content">
       <nav id="kmap-nav">
         <h1>Volcano keymap creator</h1>
+        <button id="btn-help">Help</button>
         <button id="btn-save">Save</button>
         <button id="btn-upload">Upload</button>
       </nav>
+
+      <div id="help">
+        <p>Click on a key of the upper keyboard to change its value. All changes
+        will be visible on the lower keyboard. To reset a key mapping, click the
+        key on the lower keyboard.</p>
+        <p>The allowed keynames are: <span id="keynames"></span></p>
+        You can also provide a keycode (e.g. <div class="keyname">0x58</div> is
+        a keypad <div class="keyname">ENTER</div>).
+        <p>These can be decimal or hexadecimal.</p>
+
+      </div>
+
       <div id="keyboards">
         <div class="keyboard-wrapper">
           <div class="keyboard" id="keyboard"></div>

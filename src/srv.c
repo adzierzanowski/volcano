@@ -1,13 +1,10 @@
 #include "srv.h"
 
 
-static const char *srv_data;
-static uint16_t srv_port;
-static const char *srv_socket;
-
+static struct config_t *cfg;
 
 static void srv_on_exit() {
-  dlog(LOG_INFO, "Quitting volcano server.\n");
+  dlog(LOG_INFO, "[Exit] Quitting volcano server.\n");
 }
 
 static void sigint_handler(int arg) {
@@ -16,35 +13,27 @@ static void sigint_handler(int arg) {
 
 
 int main(int argc, const char *argv[]) {
-  set_loglevel(LOG_DEBUG);
+  atexit(srv_on_exit);
+  signal(SIGINT, sigint_handler);
+
+  dlog(LOG_ALWAYS, "volcanosrv version %s.\n", VERSION);
+
+  cfg = config_get();
+  config_init(argc < 2 ? NULL : argv[1]);
 
   for (int i = 0; i < argc; i++) {
     dlog(LOG_DEBUG, "argv[%d]=%s\n", i, argv[i]);
   }
 
-  if (argc < 4) {
-    dlog(
-      LOG_ERROR,
-      "Volcano server needs 3 arguments: PORT, DATA_PATH, SOCKET_PATH.\n");
-    exit(1);
-  }
-
-  srv_port = atoi(argv[1]);
-  srv_data = argv[2];
-  srv_socket = argv[3];
-
-  dlog(LOG_INFO, "volcanosrv version %s.\n", VERSION);
-  dlog(LOG_INFO, "Starting volcano server at 0.0.0.0:%hu.\n", srv_port);
-  dlog(LOG_DEBUG, "Server assets path: %s\n", srv_data);
-  signal(SIGINT, sigint_handler);
-  atexit(srv_on_exit);
+  dlog(LOG_INFO, "Starting volcano server at http://localhost:%hu\n", cfg->srv_port);
+  dlog(LOG_DEBUG, "Server assets path: %s\n", cfg->srv_data);
 
   int s = socket(AF_INET, SOCK_STREAM, 0);
   int one = 1;
   setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(srv_port);
+  addr.sin_port = htons(cfg->srv_port);
   addr.sin_addr.s_addr = INADDR_ANY;
   bind(s, (struct sockaddr *) &addr, sizeof addr);
   listen(s, 5);
@@ -68,17 +57,17 @@ int main(int argc, const char *argv[]) {
 
     char *header = strtok(NULL, "\n");
     while (strcmp(header, "\r")) {
-      dlog(LOG_DEBUG, "[Header] %s\n", header);
+      dlog(LOG_SILLY, "[Header] %s\n", header);
       header = strtok(NULL, "\n");
     }
 
     char *body = strtok(NULL, "");
-    dlog(LOG_DEBUG, "[Body] %s\n", body);
+    dlog(LOG_SILLY, "[Body] %s\n", body);
 
     size_t response_size = 0;
     char *response = handle_request(method, path, body, &response_size);
 
-    dlog(LOG_INFO, "Sending response:\n\n%s\n\n", response);
+    dlog(LOG_SILLY, "Sending response:\n\n%s\n\n", response);
     send(sock, response, response_size, 0);
     close(sock);
     free(response);
@@ -200,13 +189,13 @@ char *handle_request_get(char *path, size_t *ressz) {
     NULL)) {
     char fpath[SMALLBUFSZ] = {0};
     if (strcmp(path, "/") == 0) {
-      sprintf(fpath, "%s/index.html", srv_data);
+      sprintf(fpath, "%s/index.html", cfg->srv_data);
 
     } else if (strmatch(path, "/kmap", NULL)) {
-      sprintf(fpath, "%s/%s.html", srv_data, path);
+      sprintf(fpath, "%s/%s.html", cfg->srv_data, path);
 
     } else {
-      sprintf(fpath, "%s%s", srv_data, path);
+      sprintf(fpath, "%s%s", cfg->srv_data, path);
     }
 
     dlog(LOG_DEBUG, "File request: %s\n", fpath);
@@ -250,7 +239,7 @@ bool daemon_send(char *rxbuf, const char *fmt, ...) {
   int s = socket(AF_UNIX, SOCK_STREAM, 0);
   struct sockaddr_un addr;
   addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, srv_socket);
+  strcpy(addr.sun_path, cfg->socket_file);
   connect(s, (struct sockaddr *) &addr, sizeof addr);
   char msg[SMALLBUFSZ] = {0};
 

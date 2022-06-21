@@ -17,6 +17,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include "config.h"
 #include "fmt.h"
 #include "keyboard.h"
 #include "version.h"

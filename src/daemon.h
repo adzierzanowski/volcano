@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,36 +20,12 @@
 
 #include <libusb.h>
 
+#include "config.h"
 #include "fmt.h"
 #include "keyboard.h"
+#include "util.h"
 #include "version.h"
 
-#ifdef __APPLE__
-#include <mach-o/dyld.h>
-#define VOLCANO_DEFAULT_UID 501
-#define VOLCANO_DEFAULT_GID 20
-#else
-#define VOLCANO_DEFAULT_UID 1000
-#define VOLCANO_DEFAULT_GID 1000
-#endif
-
-#define VOLCANO_DEFAULT_COLOR 0xffffff
-#define VOLCANO_DEFAULT_MODE "norm"
-#define VOLCANO_DEFAULT_PORT 65226
-
-
-struct config_t {
-  char *kmap_file;
-  char *socket_file;
-  char *init_mode;
-  char *srv_data;
-  char *srv_exe;
-  int socket_uid;
-  int socket_gid;
-  uint32_t init_color;
-  uint16_t srv_port;
-  bool srv_enable;
-} config;
 
 enum status_t {
   OK = 0,
@@ -94,12 +71,6 @@ int hotplug_handler(
   struct libusb_device *dev,
   libusb_hotplug_event event,
   void *user_data);
-// Initializes the configuration
-void config_init(const char *rcfname);
-// Reads the config from filename
-void config_read(const char *rcfname);
-// Parses an incoming command and acts accordingly
-// Returns status of the action (`OK` on success, other status otherwise)
 enum status_t parse_command(char *cmdbuf);
 // Returns a short explanation of a status code
 const char *status_str(enum status_t status);
