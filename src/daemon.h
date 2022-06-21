@@ -21,6 +21,7 @@
 
 #include "fmt.h"
 #include "keyboard.h"
+#include "version.h"
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>

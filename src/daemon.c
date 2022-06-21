@@ -106,6 +106,8 @@ int daemon_main(int argc, const char *argv[]) {
   libusb_init(&ctx);
   libusb_hotplug_callback_handle cbhandle;
 
+  dlog(LOG_INFO, "volcanod version %s\n", VERSION);
+
   dlog(LOG_DEBUG, "Attempting to register hotplug callback.\n");
   int status = libusb_hotplug_register_callback(
     ctx,

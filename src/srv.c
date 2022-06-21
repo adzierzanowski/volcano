@@ -33,6 +33,7 @@ int main(int argc, const char *argv[]) {
   srv_data = argv[2];
   srv_socket = argv[3];
 
+  dlog(LOG_INFO, "volcanosrv version %s.\n", VERSION);
   dlog(LOG_INFO, "Starting volcano server at 0.0.0.0:%hu.\n", srv_port);
   dlog(LOG_DEBUG, "Server assets path: %s\n", srv_data);
   signal(SIGINT, sigint_handler);
