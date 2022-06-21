@@ -1,3 +1,10 @@
 #!/usr/bin/env bash
 
-open http://localhost:65226
+
+url="http://localhost:65226"
+
+if [ -x "$(command -v xdg-open)" ]; then
+  xdg-open $url
+elif [ -x "$(command -v open)" ]; then
+  open $url
+fi
