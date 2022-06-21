@@ -44,6 +44,8 @@ static void on_hotplug() {
     kbd_set_color(
       kbdh, config.init_color >> 16, config.init_color >> 8, config.init_color);
     kbd_release();
+  } else {
+    dlog(LOG_ERROR, "Keyboard has been hotplugged but the keyboard handle is NULL.\n");
   }
 }
 
