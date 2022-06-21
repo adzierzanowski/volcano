@@ -239,6 +239,18 @@ int hotplug_handler(
   return 0;
 }
 
+static void droplastslash(char *buf) {
+  int last_slash = -1;
+  for (int i = 0; i < strlen(buf); i++) {
+    if (buf[i] == '/') {
+      last_slash = i;
+    }
+  }
+
+  if (last_slash > -1) {
+    buf[last_slash] = 0;
+  }
+}
 
 void config_init(const char *rcfname) {
   dlog(LOG_INFO, "Initializing config\n");
@@ -275,8 +287,16 @@ void config_init(const char *rcfname) {
 
   sprintf(config.socket_file, "%s/.volcano.sock", homedir);
   sprintf(config.init_mode, "%s", VOLCANO_DEFAULT_MODE);
-  sprintf(config.srv_data, "%s/../../www", vpath);
-  sprintf(config.srv_exe, "%s/../volcanosrv", vpath);
+
+  char pathbuf[SMALLBUFSZ] = {0};
+  strcpy(pathbuf, vpath);
+  droplastslash(pathbuf);
+  droplastslash(pathbuf);
+  sprintf(config.srv_data, "%s/www", pathbuf);
+
+  strcpy(pathbuf, vpath);
+  droplastslash(pathbuf);
+  sprintf(config.srv_exe, "%s/volcanosrv", pathbuf);
 
   config.socket_uid = VOLCANO_DEFAULT_UID;
   config.socket_gid = VOLCANO_DEFAULT_GID;
