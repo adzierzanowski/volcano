@@ -16,6 +16,7 @@ endif
 
 BUILD = build
 BIN = bin
+SRC = src
 
 .PHONY: all
 all: volcanod volcano volcanosrv volcanoctl
@@ -46,5 +47,8 @@ clean:
 	-rm -rf $(BUILD)
 	-rm -rf $(BIN)
 
-$(BUILD)/%.o: src/%.c $(BUILD)
+$(BUILD)/%.o: $(SRC)/%.c $(BUILD)
 	$(CC) -c $(CFLAGS) $< -o $@
+
+
+$(SRC)/%.c: $(SRC)/%.h

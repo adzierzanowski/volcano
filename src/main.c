@@ -41,7 +41,7 @@ void usage() {
     "CODE REPOSITORY:"
   );
 
-  printf("    volcano v. %s\n", VERSION);
+  printf("    volcano v. %s\n", VLC_VERSION);
 
   puts(
     "    Copyright (C) 2022 A. Dzierzanowski\n"

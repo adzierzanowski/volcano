@@ -3,6 +3,9 @@
 
 static struct vlc_config_t *cfg;
 
+// The daemon's UNIX socket
+static int dsock = -1;
+
 // A flag which is being set on hotplug and is used in the main routine
 static bool kbd_hotplugged = false;
 
@@ -54,21 +57,31 @@ static void on_hotplug(void) {
   }
 }
 
-static void daemon_on_exit(void) {
-  if (fexists(cfg->socket_file)) {
-    vlc_log(VLC_LOG_DEBUG, "[Exit] Removing socket file.\n");
+static void vlc_daemon_on_exit(void) {
+  if (dsock > 0) {
+    vlc_log(VLC_LOG_INFO, "[Exit] Closing the daemon socket.\n");
+    close(dsock);
+  }
+
+  if (vlc_fexists(cfg->socket_file)) {
+    vlc_log(
+      VLC_LOG_INFO,
+      "[Exit] Removing the daemon socket file: %s.\n",
+      cfg->socket_file);
     remove(cfg->socket_file);
   }
+
+  vlc_log(VLC_LOG_INFO, "[Exit] Quitting the volcano daemon.\n");
 }
 
-static void sigint_handler(int sig) {
-  vlc_log(VLC_LOG_DEBUG, "[Exit] SIGINT\n");
+static void vlc_daemon_sigint_handler(int sig) {
+  vlc_log(VLC_LOG_INFO, "[Exit] SIGINT\n");
   exit(0);
 }
 
 int main(int argc, const char *argv[]) {
-  atexit(daemon_on_exit);
-  signal(SIGINT, sigint_handler);
+  atexit(vlc_daemon_on_exit);
+  signal(SIGINT, vlc_daemon_sigint_handler);
   vlc_set_loglevel(VLC_LOG_DEBUG);
 
   cfg = vlc_config_get();
@@ -111,7 +124,7 @@ int main(int argc, const char *argv[]) {
 }
 
 int vlc_daemon_main(int argc, const char *argv[]) {
-  vlc_log(VLC_LOG_ALWAYS, "volcanod version %s\n", VERSION);
+  vlc_log(VLC_LOG_ALWAYS, "volcanod version %s\n", VLC_VERSION);
 
   libusb_init(&ctx);
   libusb_hotplug_callback_handle cbhandle;
@@ -143,8 +156,8 @@ int vlc_daemon_main(int argc, const char *argv[]) {
 
   on_hotplug();
 
-  int s = vlc_daemon_create_socket();
-  vlc_log(VLC_LOG_DEBUG, "Socket created: fd=%d\n", s);
+  dsock = vlc_daemon_create_socket();
+  vlc_log(VLC_LOG_INFO, "Socket created: fd=%d\n", dsock);
 
   for (;;) {
     libusb_handle_events_timeout_completed(ctx, &timeout, NULL);
@@ -155,7 +168,9 @@ int vlc_daemon_main(int argc, const char *argv[]) {
       on_hotplug();
     }
 
-    int rsock = accept(s, (struct sockaddr *) &addr, &len);
+    // The socket file descriptor is set to NONBLOCKING
+    // So accept() returns immediately
+    int rsock = accept(dsock, (struct sockaddr *) &addr, &len);
 
     if (rsock != -1) {
       char buf[VLC_SMALLBUFSZ] = {0};
@@ -193,10 +208,6 @@ bool vlc_kbd_release() {
 }
 
 int vlc_daemon_create_socket() {
-  if (fexists(cfg->socket_file)) {
-    remove(cfg->socket_file);
-  }
-
   addr.sun_family = AF_UNIX;
   strcpy(addr.sun_path, cfg->socket_file);
 
@@ -218,8 +229,20 @@ int vlc_daemon_create_socket() {
   }
 
   vlc_log(VLC_LOG_DEBUG, "Setting permissions to the socket file.\n");
-  chmod(cfg->socket_file, S_IRWXG | S_IRWXO | S_IRWXU);
-  chown(cfg->socket_file, cfg->socket_uid, cfg->socket_gid);
+
+  if (chmod(cfg->socket_file, S_IRWXG | S_IRWXO | S_IRWXU) == -1) {
+    vlc_log(
+      VLC_LOG_WARNING,
+      "Couldn't change the permissions of the socket file: %s",
+      strerror(errno));
+  }
+
+  if (chown(cfg->socket_file, cfg->socket_uid, cfg->socket_gid) == -1) {
+    vlc_log(
+      VLC_LOG_WARNING,
+      "Couldn't change the ownership of the socket file: %s",
+      strerror(errno));
+  }
 
   if (listen(s, 5) == -1) {
     vlc_log(VLC_LOG_ERROR, "Failed to listen.\n");
