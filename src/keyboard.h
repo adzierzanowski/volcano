@@ -26,7 +26,7 @@ struct kbd_key_t {
 };
 
 // An array of the key codes used for setting a single key color
-const struct kbd_key_t kcolor_keys[90];
+const struct kbd_key_t kcolor_keys[111];
 const size_t keys_sz;
 
 // Keymapping struct
