@@ -259,6 +259,30 @@ bool daemon_send(char *rxbuf, const char *fmt, ...) {
   return strcmp(rxbuf, "OK") == 0;
 }
 
+static char *dispatch_helper(
+  char *rxbuf,
+  char **spath,
+  size_t spathsz,
+  size_t expected_spathsz,
+  size_t *ressz) {
+  if (spathsz < expected_spathsz-1) {
+    char buf[SMALLBUFSZ] = {0};
+    sprintf(buf, "%s command needs %zu arguments.", spath[0], expected_spathsz-1);
+    return http_make_api_response(400, buf, ressz);
+  }
+
+  char cmdbuf[SMALLBUFSZ] = {0};
+  for (int i = 0; i < spathsz; i++) {
+    strcat(cmdbuf, spath[i]);
+    if (i < spathsz - 1) {
+      strcat(cmdbuf, " ");
+    }
+  }
+
+  int status = daemon_send(rxbuf, cmdbuf) ? 200 : 400;
+  return http_make_api_response(status, rxbuf, ressz);
+}
+
 char *dispatch_cmd(char **spath, size_t spathsz, char *body, size_t *ressz) {
   char rxbuf[SMALLBUFSZ] = {0};
 
@@ -267,89 +291,13 @@ char *dispatch_cmd(char **spath, size_t spathsz, char *body, size_t *ressz) {
   }
 
   if (strcmp(spath[0], "color") == 0) {
-    if (spathsz != 4) {
-      return http_make_api_response(
-        400, "color command needs 3 arguments.", ressz);
-    }
-
-    int r = atoi(spath[1]);
-    int g = atoi(spath[2]);
-    int b = atoi(spath[3]);
-    int status = daemon_send(rxbuf, "color %d %d %d", r, g, b) ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
+    return dispatch_helper(rxbuf, spath, spathsz, 4, ressz);
 
   } else if (strcmp(spath[0], "kcolor") == 0) {
-    if (spathsz != 5) {
-      return http_make_api_response(
-        400, "color command needs 4 arguments.", ressz);
-    }
+    return dispatch_helper(rxbuf, spath, spathsz, 5, ressz);
 
-    char *key = spath[1];
-    int r = atoi(spath[2]);
-    int g = atoi(spath[3]);
-    int b = atoi(spath[4]);
-
-    int status = daemon_send(rxbuf, "kcolor %s %d %d %d", key, r, g, b)
-      ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
-
-  } else if (strcmp(spath[0], "mode") == 0) {
-    if (spathsz != 2) {
-      return http_make_api_response(
-        400, "mode command needs exactly one argument.", ressz);
-    }
-
-    int status = daemon_send(rxbuf, "mode %s", spath[1]) ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
-
-  } else if (strcmp(spath[0], "speed") == 0) {
-    if (spathsz != 2) {
-      return http_make_api_response(
-        400, "speed command needs exactly one argument.", ressz);
-    }
-
-    int level = atoi(spath[1]);
-    int status = daemon_send(rxbuf, "speed %d", level) ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
-
-  } else if (strcmp(spath[0], "brightness") == 0) {
-    if (spathsz != 2) {
-      return http_make_api_response(
-        400, "brightness command needs exactly one argument.", ressz);
-    }
-
-    int level = atoi(spath[1]);
-    int status = daemon_send(rxbuf, "brightness %d", level) ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
-
-  } else if (strcmp(spath[0], "dir") == 0) {
-    if (spathsz != 2) {
-      return http_make_api_response(
-        400, "dir command needs exactly one argument.", ressz);
-    }
-
-    int dir = atoi(spath[1]);
-    int status = daemon_send(rxbuf, "dir %d", dir) ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
-
-  } else if (strcmp(spath[0], "rainbow") == 0) {
-    if (spathsz != 2) {
-      return http_make_api_response(
-        400, "rainbow command needs exactly one argument.", ressz);
-    }
-
-    int status = daemon_send(rxbuf, "rainbow %s", spath[1]) ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
-
-  } else if (strcmp(spath[0], "rate") == 0) {
-    if (spathsz != 2) {
-      return http_make_api_response(
-        400, "rate command needs exactly 2 arguments.", ressz);
-    }
-
-    int rate = atoi(spath[1]);
-    int status = daemon_send(rxbuf, "rate %d", rate) ? 200 : 400;
-    return http_make_api_response(status, rxbuf, ressz);
+  } else if (strmatch(spath[0], "rate", "mode", "speed", "brightness", "dir", "rainbow", NULL)) {
+    return dispatch_helper(rxbuf, spath, spathsz, 2, ressz);
 
   } else if (strcmp(spath[0], "kmap") == 0) {
     if (body[0] != '[') {
@@ -368,7 +316,6 @@ char *dispatch_cmd(char **spath, size_t spathsz, char *body, size_t *ressz) {
     }
 
     int status = daemon_send(rxbuf, "kmap %s", msg) ? 200 : 400;
-
     return http_make_api_response(status, rxbuf, ressz);
   }
 
