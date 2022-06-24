@@ -558,7 +558,9 @@ bool vlc_kbd_set_report_rate(libusb_device_handle *kbdh, enum vlc_kbd_rate_t rat
 
 bool vlc_kbd_set_direction(libusb_device_handle *kbdh, enum vlc_kbd_dir_t dir) {
   if (!vlc_kbd_send_start(kbdh)) return false;
-  if (!vlc_kbd_va_send_and_recv(kbdh, 0, 0x04, 0x0a+dir, 0x00, 0x06, 0x01, 0x03, 0x00, 0x00, dir)) return false;
+  if (!vlc_kbd_va_send_and_recv(
+    kbdh,
+    9, 0x04, 0x0a+dir, 0x00, 0x06, 0x01, 0x03, 0x00, 0x00, dir)) return false;
   if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }

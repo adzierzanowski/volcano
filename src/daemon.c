@@ -545,7 +545,7 @@ enum vlc_status_t vlc_daemon_parse_command(char *cmdbuf) {
     if (!vlc_kbd_release()) return VLC_ERR_KBD_RELEASE;
     return VLC_OK;
 
-  } else if (strcmp(tok, "dir") == 0) {
+  } else if (strcmp(tok, "dir") == 0 || strcmp(tok, "direction") == 0) {
     tok = strtok(NULL, delim);
     if (tok == NULL) {
       vlc_log(VLC_LOG_WARNING, "Direction command without an argument.\n");

@@ -388,7 +388,11 @@ char *vlc_srv_cmd_handle(char **spath, size_t spathsz, char *body, size_t *ressz
   } else if (strcmp(spath[0], "kcolor") == 0) {
     return vlc_srv_cmd_send(rxbuf, spath, spathsz, 5, ressz);
 
-  } else if (vlc_strmatch(spath[0], "rate", "mode", "speed", "brightness", "dir", "rainbow", NULL)) {
+  } else if (
+    vlc_strmatch(
+      spath[0],
+      "rate", "mode", "speed", "brightness", "dir", "direction", "rainbow",
+      NULL)) {
     return vlc_srv_cmd_send(rxbuf, spath, spathsz, 2, ressz);
 
   } else if (strcmp(spath[0], "kmap") == 0) {

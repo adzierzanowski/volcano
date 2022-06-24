@@ -207,6 +207,16 @@ const setup = () => {
 
   document.getElementById('misc-apply').addEventListener('click', miscApply);
 
+  document.querySelectorAll('.misc-single-apply').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const optname = btn.id.replace('-apply', '');
+      const value = miscSettings?.[optname];
+      if (value !== null) {
+        sendCmd(`/${optname}/${value}`);
+      }
+    });
+  });
+
   updateColors(document.getElementById('color-input__hex'));
   updateMiscSettings();
 };
