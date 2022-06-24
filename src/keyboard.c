@@ -1,7 +1,7 @@
 #include "keyboard.h"
 
 
-const struct kbd_key_t kcolor_keys[111] = {
+const struct vlc_kbd_key_t vlc_kcolor_keys[111] = {
   { .name = "ESC", .val = 0x140000 },
   { .name = "F1", .val = 0x170300 },
   { .name = "F2", .val = 0x1a0600 },
@@ -120,36 +120,36 @@ const struct kbd_key_t kcolor_keys[111] = {
   { .name = "RIGHT", .val = 0x7e6b01 },
 };
 
-const size_t keys_sz = sizeof kcolor_keys / sizeof kcolor_keys[0];
+const size_t vlc_keys_sz = sizeof vlc_kcolor_keys / sizeof vlc_kcolor_keys[0];
 
-bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh) {
+bool vlc_kbd_open(libusb_context **ctx, libusb_device_handle **kbdh) {
   *ctx = NULL;
   *kbdh = NULL;
 
   int status = 0;
   libusb_init(ctx);
   if (status != 0) {
-    print_libusb_err(status);
+    vlc_print_libusb_err(status);
     return false;
   }
 
-  *kbdh = libusb_open_device_with_vid_pid(*ctx, KBD_VID, KBD_PID);
+  *kbdh = libusb_open_device_with_vid_pid(*ctx, VLC_KBD_VID, VLC_KBD_PID);
   if (*kbdh == NULL) {
-    dlog(LOG_ERROR, "Keyboard not found.\n");
+    vlc_log(VLC_LOG_ERROR, "Keyboard not found.\n");
     return false;
   }
 
-  status = libusb_detach_kernel_driver(*kbdh, CTL_INTERFACE);
+  status = libusb_detach_kernel_driver(*kbdh, VLC_CTL_INTERFACE);
   if (status != 0) {
-    print_libusb_err(status);
+    vlc_print_libusb_err(status);
     libusb_close(*kbdh);
     return false;
   }
 
-  status = libusb_claim_interface(*kbdh, CTL_INTERFACE);
+  status = libusb_claim_interface(*kbdh, VLC_CTL_INTERFACE);
   if (status != 0) {
-    print_libusb_err(status);
-    libusb_attach_kernel_driver(*kbdh, CTL_INTERFACE);
+    vlc_print_libusb_err(status);
+    libusb_attach_kernel_driver(*kbdh, VLC_CTL_INTERFACE);
     return false;
   }
 
@@ -158,45 +158,45 @@ bool kbd_open(libusb_context **ctx, libusb_device_handle **kbdh) {
   return true;
 }
 
-bool kbd_close(libusb_context *ctx, libusb_device_handle *kbdh) {
-  libusb_release_interface(kbdh, CTL_INTERFACE);
+bool vlc_kbd_close(libusb_context *ctx, libusb_device_handle *kbdh) {
+  libusb_release_interface(kbdh, VLC_CTL_INTERFACE);
   libusb_set_option(ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_ERROR);
-  libusb_attach_kernel_driver(kbdh, CTL_INTERFACE);
+  libusb_attach_kernel_driver(kbdh, VLC_CTL_INTERFACE);
   libusb_close(kbdh);
   libusb_exit(ctx);
   return true;
 }
 
-bool kbd_send(libusb_device_handle *kbdh, uint8_t msg[64]) {
+bool vlc_kbd_send(libusb_device_handle *kbdh, uint8_t msg[64]) {
   int transferred = libusb_control_transfer(
     kbdh,
-    CTL_REQUEST_TYPE,
-    CTL_REQUEST,
-    CTL_REQUEST_VALUE,
-    CTL_INTERFACE,
+    VLC_CTL_REQUEST_TYPE,
+    VLC_CTL_REQUEST,
+    VLC_CTL_REQUEST_VALUE,
+    VLC_CTL_INTERFACE,
     msg,
     64,
     1000);
 
   if (transferred != 64) {
-    print_libusb_err(transferred);
+    vlc_print_libusb_err(transferred);
     return false;
   }
 
   return true;
 }
 
-bool kbd_recv(
+bool vlc_kbd_recv(
   libusb_device_handle *kbdh, size_t sz, uint8_t *buf, unsigned int timeout) {
   memset(buf, 0, sz);
 
   // TODO:
   int transferred = 0;
   int status = libusb_bulk_transfer(
-    kbdh, CTL_ENDPOINT, (unsigned char *) buf, sz, &transferred, timeout);
+    kbdh, VLC_CTL_ENDPOINT, (unsigned char *) buf, sz, &transferred, timeout);
 
   if (status != 0) {
-    print_libusb_err(status);
+    vlc_print_libusb_err(status);
     return false;
   }
 
@@ -207,13 +207,13 @@ bool kbd_validate_response(uint8_t *sent, uint8_t *recv, size_t sz) {
   for (int i = 0; i < sz; i++) {
     if (i == 7) {
       if (recv[i] != 1) {
-        dlog(LOG_ERROR, "Response invalid (NACK)");
+        vlc_log(VLC_LOG_ERROR, "Response invalid (NACK)");
         return false;
       }
     } else {
       if ((uint8_t) sent[i] != (uint8_t) recv[i]) {
-        dlog(LOG_ERROR, "Received data does not match.\n");
-        dlog(LOG_ERROR, "  i=%d sent=%d received=%d\n", i, sent[i], recv[i]);
+        vlc_log(VLC_LOG_ERROR, "Received data does not match.\n");
+        vlc_log(VLC_LOG_ERROR, "  i=%d sent=%d received=%d\n", i, sent[i], recv[i]);
         return false;
       }
     }
@@ -221,14 +221,14 @@ bool kbd_validate_response(uint8_t *sent, uint8_t *recv, size_t sz) {
   return true;
 }
 
-bool kbd_send_and_recv(libusb_device_handle *kbdh, uint8_t msg[64]) {
-  if (!kbd_send(kbdh, msg)) {
+bool vlc_kbd_send_and_recv(libusb_device_handle *kbdh, uint8_t msg[64]) {
+  if (!vlc_kbd_send(kbdh, msg)) {
     return false;
   }
 
   uint8_t recv[64] = {0};
 
-  if (!kbd_recv(kbdh, 64, (uint8_t *) recv, 1000)) {
+  if (!vlc_kbd_recv(kbdh, 64, (uint8_t *) recv, 1000)) {
     return false;
   }
 
@@ -239,7 +239,7 @@ bool kbd_send_and_recv(libusb_device_handle *kbdh, uint8_t msg[64]) {
   return true;
 }
 
-bool kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...) {
+bool vlc_kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...) {
   uint8_t msg[64] = {0};
 
   va_list args;
@@ -249,12 +249,12 @@ bool kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...) {
   }
   va_end(args);
 
-  bool status = kbd_send_and_recv(kbdh, msg);
+  bool status = vlc_kbd_send_and_recv(kbdh, msg);
 
   return status;
 }
 
-bool kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color) {
+bool vlc_kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color) {
   uint8_t d1 = (key >> 16) & 0xff;
   uint8_t d5 = (key >> 8) & 0xff;
   uint8_t d6 = key & 0xff;
@@ -262,99 +262,99 @@ bool kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color)
   uint8_t g = (color >> 8) & 0xff;
   uint8_t b = color & 0xff;
 
-  if (!kbd_send_start(kbdh)) return false;
-  if (!kbd_set_mode(kbdh, KBD_MODE_CUSTOM)) return false;
-  if (!kbd_va_send_and_recv(
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_set_mode(kbdh, VLC_KBD_MODE_CUSTOM)) return false;
+  if (!vlc_kbd_va_send_and_recv(
     kbdh, 11, 0x04, d1, 0x00, 0x11, 0x03, d5, d6, 0x00, r, b, g)) return false;
-  if (!kbd_send_end(kbdh)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
 
-bool kbd_send_start(libusb_device_handle *kbdh) {
-  return kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
+bool vlc_kbd_send_start(libusb_device_handle *kbdh) {
+  return vlc_kbd_va_send_and_recv(kbdh, 4, 0x04, 0x01, 0x00, 0x01);
 }
 
-bool kbd_send_end(libusb_device_handle *kbdh) {
-  return kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
+bool vlc_kbd_send_end(libusb_device_handle *kbdh) {
+  return vlc_kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
 }
 
 
-const struct kbd_key_t *kbd_get_key(const char *name) {
-  for (int i = 0; i < keys_sz; i++) {
-    if (strcmp(name, kcolor_keys[i].name) == 0) {
-      return &kcolor_keys[i];
+const struct vlc_kbd_key_t *vlc_kbd_get_key(const char *name) {
+  for (int i = 0; i < vlc_keys_sz; i++) {
+    if (strcmp(name, vlc_kcolor_keys[i].name) == 0) {
+      return &vlc_kcolor_keys[i];
     }
   }
   return NULL;
 }
 
-bool kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b) {
-  if (!kbd_send_start(kbdh)) return false;
-  if (!kbd_va_send_and_recv(
+bool vlc_kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b) {
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_va_send_and_recv(
     kbdh,
     11,
     0x04, 0x0d, 0x01, 0x06, 0x03, 0x05, 0x00, 0x00, r, b, g)) return false;
-  if (!kbd_send_end(kbdh)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
 
-bool kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow) {
-  if (!kbd_send_start(kbdh)) return false;
+bool vlc_kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow) {
+  if (!vlc_kbd_send_start(kbdh)) return false;
   if (rainbow) {
-    if (!kbd_va_send_and_recv(
+    if (!vlc_kbd_va_send_and_recv(
       kbdh, 9, 0x04, 0x0c, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x01)) return false;
   } else {
-    if (!kbd_va_send_and_recv(kbdh, 6, 0x04, 0x0b, 0x00, 0x06, 0x01, 0x04)) return false;
+    if (!vlc_kbd_va_send_and_recv(kbdh, 6, 0x04, 0x0b, 0x00, 0x06, 0x01, 0x04)) return false;
   }
-  if (!kbd_send_end(kbdh)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
 
-enum kbd_mode_t kbd_get_mode(const char *modestr) {
+enum vlc_kbd_mode_t vlc_kbd_get_mode(const char *modestr) {
   if (strcmp(modestr, "norm") == 0) {
-    return KBD_MODE_NORMAL;
+    return VLC_KBD_MODE_NORMAL;
   } else if (strcmp(modestr, "custom") == 0) {
-    return KBD_MODE_CUSTOM;
+    return VLC_KBD_MODE_CUSTOM;
   } else if (strcmp(modestr, "stream") == 0) {
-    return KBD_MODE_STREAM;
+    return VLC_KBD_MODE_STREAM;
   } else if (strcmp(modestr, "clouds") == 0) {
-    return KBD_MODE_CLOUDS;
+    return VLC_KBD_MODE_CLOUDS;
   } else if (strcmp(modestr, "swirl") == 0) {
-    return KBD_MODE_SWIRL;
+    return VLC_KBD_MODE_SWIRL;
   } else if (strcmp(modestr, "rgb-breath") == 0) {
-    return KBD_MODE_RAINBOW_BREATHING;
+    return VLC_KBD_MODE_RAINBOW_BREATHING;
   } else if (strcmp(modestr, "breath") == 0) {
-    return KBD_MODE_BREATHING;
+    return VLC_KBD_MODE_BREATHING;
   } else if (strcmp(modestr, "hotmap") == 0) {
-    return KBD_MODE_HOTMAP;
+    return VLC_KBD_MODE_HOTMAP;
   } else if (strcmp(modestr, "ripple") == 0) {
-    return KBD_MODE_RIPPLE;
+    return VLC_KBD_MODE_RIPPLE;
   } else if (strcmp(modestr, "ripple-lines") == 0) {
-    return KBD_MODE_RIPPLE_LINES;
+    return VLC_KBD_MODE_RIPPLE_LINES;
   } else if (strcmp(modestr, "snow") == 0) {
-    return KBD_MODE_SNOW;
+    return VLC_KBD_MODE_SNOW;
   } else if (strcmp(modestr, "rgb-dots") == 0) {
-    return KBD_MODE_RAINBOW_DOTS;
+    return VLC_KBD_MODE_RAINBOW_DOTS;
   } else if (strcmp(modestr, "rgb-lines") == 0) {
-    return KBD_MODE_RAINBOW_LINES;
+    return VLC_KBD_MODE_RAINBOW_LINES;
   } else if (strcmp(modestr, "triangular") == 0) {
-    return KBD_MODE_TRAINGULAR_WAVES;
+    return VLC_KBD_MODE_TRAINGULAR_WAVES;
   } else if (strcmp(modestr, "drain") == 0) {
-    return KBD_MODE_DRAIN;
+    return VLC_KBD_MODE_DRAIN;
   } else if (strcmp(modestr, "matrix") == 0) {
-    return KBD_MODE_MATRIX;
+    return VLC_KBD_MODE_MATRIX;
   } else if (strcmp(modestr, "scanline") == 0) {
-    return KBD_MODE_SCANLINE;
+    return VLC_KBD_MODE_SCANLINE;
   } else if (strcmp(modestr, "gradient") == 0) {
-    return KBD_MODE_GRADIENT;
+    return VLC_KBD_MODE_GRADIENT;
   } else if (strcmp(modestr, "rgb-circle") == 0) {
-    return KBD_MODE_RAINBOW_CIRCLES;
+    return VLC_KBD_MODE_RAINBOW_CIRCLES;
   }
 
-  return KBD_MODE_UNKNOWN;
+  return VLC_KBD_MODE_UNKNOWN;
 }
 
-void kbd_print_modes(void) {
+void vlc_kbd_print_modes(void) {
   puts("    NAME            Opts   ORIGINAL NAME");
   puts("    norm            -CR-    Normally on");
   puts("    custom                  Custom settings");
@@ -377,12 +377,12 @@ void kbd_print_modes(void) {
   puts("    rgb-circle      ---D    Fast and the Furious");
 }
 
-bool kbd_set_mode(libusb_device_handle *kbdh, enum kbd_mode_t mode) {
-  return kbd_va_send_and_recv(
+bool vlc_kbd_set_mode(libusb_device_handle *kbdh, enum vlc_kbd_mode_t mode) {
+  return vlc_kbd_va_send_and_recv(
     kbdh, 9, 0x04, mode, 0x00, 0x06, 0x01, 0x00, 0x00, 0x00, mode - 0x07);
 }
 
-bool kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *k) {
+bool vlc_kbd_remap(libusb_device_handle *kbdh, struct vlc_kbd_keymap_t *k) {
   uint8_t line1[64] = {
     0x04,        0xd4,        0x02,       0x08,
     0x38,        0x00,        0x00,       0x00,
@@ -508,57 +508,57 @@ bool kbd_remap(libusb_device_handle *kbdh, struct kbd_keymap_t *k) {
     0x02, 0x54, 0x02, 0x02, 0x60, 0x02, 0x02, 0x5d
   };
 
-  if (!kbd_send_start(kbdh)) return false;
-  if (!kbd_va_send_and_recv(
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_va_send_and_recv(
     kbdh, 15,
     0x04, 0x2a, 0x01, 0x0a, 0x10, 0x00, 0x00, 0x00,
     0xaa, 0x55, 0x10, 0x00, 0x00, 0x00, 0x01)) return false;
-  if (!kbd_send_and_recv(kbdh, line1)) return false;
-  if (!kbd_send_and_recv(kbdh, line2)) return false;
-  if (!kbd_send_and_recv(kbdh, line3)) return false;
-  if (!kbd_send_and_recv(kbdh, line4)) return false;
-  if (!kbd_send_and_recv(kbdh, line5)) return false;
-  if (!kbd_send_and_recv(kbdh, line6)) return false;
-  if (!kbd_send_and_recv(kbdh, line7)) return false;
-  if (!kbd_send_end(kbdh)) return false;
+  if (!vlc_kbd_send_and_recv(kbdh, line1)) return false;
+  if (!vlc_kbd_send_and_recv(kbdh, line2)) return false;
+  if (!vlc_kbd_send_and_recv(kbdh, line3)) return false;
+  if (!vlc_kbd_send_and_recv(kbdh, line4)) return false;
+  if (!vlc_kbd_send_and_recv(kbdh, line5)) return false;
+  if (!vlc_kbd_send_and_recv(kbdh, line6)) return false;
+  if (!vlc_kbd_send_and_recv(kbdh, line7)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
 
-bool kbd_read_keymap_file(const char *fname, struct kbd_keymap_t *kmap) {
+bool vlc_kbd_read_keymap_file(const char *fname, struct vlc_kbd_keymap_t *kmap) {
   FILE *f = fopen(fname, "rb");
   if (f == NULL) return false;
-  fread(kmap, sizeof (struct kbd_keymap_t), 1, f);
+  fread(kmap, sizeof (struct vlc_kbd_keymap_t), 1, f);
   fclose(f);
   return true;
 }
 
-bool kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level) {
-  if (!kbd_send_start(kbdh)) return false;
-  if (!kbd_va_send_and_recv(
+bool vlc_kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level) {
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_va_send_and_recv(
     kbdh, 9, 0x04, 0x08 + level, 0x00, 0x06, 0x01, 0x01, 0x00, 0x00, level)) return false;
-  if (!kbd_send_end(kbdh)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
 
-bool kbd_set_speed(libusb_device_handle *kbdh, uint8_t level) {
-  if (!kbd_send_start(kbdh)) return false;
-  if (!kbd_va_send_and_recv(
+bool vlc_kbd_set_speed(libusb_device_handle *kbdh, uint8_t level) {
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_va_send_and_recv(
     kbdh, 9, 0x04, 0x0d - level, 0x00, 0x06, 0x01, 0x02, 0x00, 0x00, 0x04 - level)) return false;
-  if (!kbd_send_end(kbdh)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
 
-bool kbd_set_report_rate(libusb_device_handle *kbdh, enum kbd_rate_t rate) {
-  if (!kbd_send_start(kbdh)) return false;
-  if (!kbd_va_send_and_recv(
+bool vlc_kbd_set_report_rate(libusb_device_handle *kbdh, enum vlc_kbd_rate_t rate) {
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_va_send_and_recv(
     kbdh, 9, 0x04, 0x16 + rate, 0x00, 0x06, 0x01, 0x0f, 0x00, 0x00, rate)) return false;
-  if (!kbd_send_end(kbdh)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
 
-bool kbd_set_direction(libusb_device_handle *kbdh, enum kbd_dir_t dir) {
-  if (!kbd_send_start(kbdh)) return false;
-  if (!kbd_va_send_and_recv(kbdh, 0, 0x04, 0x0a+dir, 0x00, 0x06, 0x01, 0x03, 0x00, 0x00, dir)) return false;
-  if (!kbd_send_end(kbdh)) return false;
+bool vlc_kbd_set_direction(libusb_device_handle *kbdh, enum vlc_kbd_dir_t dir) {
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_va_send_and_recv(kbdh, 0, 0x04, 0x0a+dir, 0x00, 0x06, 0x01, 0x03, 0x00, 0x00, dir)) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }

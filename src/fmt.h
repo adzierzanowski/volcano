@@ -18,37 +18,37 @@
 #include <libproc.h>
 #endif
 
-#define BUFSZ 20480
-#define SMALLBUFSZ 2048
+#define VLC_BUFSZ 20480
+#define VLC_SMALLBUFSZ 2048
 
-enum loglevel_t {
-  LOG_ALWAYS = -1,
-  LOG_ERROR = 0,
-  LOG_WARNING = 1,
-  LOG_INFO = 2,
-  LOG_DEBUG = 3,
-  LOG_SILLY = 4,
+enum vlc_loglevel_t {
+  VLC_LOG_ALWAYS = -1,
+  VLC_LOG_ERROR = 0,
+  VLC_LOG_WARNING = 1,
+  VLC_LOG_INFO = 2,
+  VLC_LOG_DEBUG = 3,
+  VLC_LOG_SILLY = 4,
 };
 
 // Prints to stderr if `level` matches configured logging level
-void dlog(enum loglevel_t level, const char *fmt, ...);
+void vlc_log(enum vlc_loglevel_t level, const char *fmt, ...);
 // Returns loglevel name
-const char *loglevelstr(enum loglevel_t level);
+const char *vlc_loglevelstr(enum vlc_loglevel_t level);
 // Sets the logging level
-void set_loglevel(enum loglevel_t level);
+void vlc_set_loglevel(enum vlc_loglevel_t level);
 // Sets ANSI-escape-code-colored logging option
-void set_logcolor(bool do_color);
+void vlc_set_logcolor(bool do_color);
 
 // Prints libusb error string based on libusb status code
-void print_libusb_err(int status);
+void vlc_print_libusb_err(int status);
 
 // Returns `true` if `str` matches any of passed arguments
 // The argument list is delimited by passing `NULL` as a last arg
-bool strmatch(char *str, ...);
+bool vlc_strmatch(char *str, ...);
 // Returns an array of strings made by spliting `str` by `delim`
 // The lenght of the returned array is saved in `outsz`
-char **strsplit(char *str, size_t *outsz, const char *delim);
-// Frees memory allocated for the array created with `strsplit`
-void strsplit_free(char **spath, size_t spathsz);
+char **vlc_strsplit(char *str, size_t *outsz, const char *delim);
+// Frees memory allocated for the array created with `vlc_strsplit`
+void vlc_strsplit_free(char **spath, size_t spathsz);
 
 #endif

@@ -1,10 +1,10 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef VLC_UTIL_H
+#define VLC_UTIL_H
 
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
-bool fexists(const char *fname);
+bool vlc_fexists(const char *fname);
 
 #endif

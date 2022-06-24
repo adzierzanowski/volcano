@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef VLC_CONFIG_H
+#define VLC_CONFIG_H
 
 #include <pwd.h>
 #include <string.h>
@@ -13,19 +13,19 @@
 
 
 #ifdef __APPLE__
-#define VOLCANO_DEFAULT_UID 501
-#define VOLCANO_DEFAULT_GID 20
+#define VLC_DEFAULT_UID 501
+#define VLC_DEFAULT_GID 20
 #else
-#define VOLCANO_DEFAULT_UID 1000
-#define VOLCANO_DEFAULT_GID 1000
+#define VLC_DEFAULT_UID 1000
+#define VLC_DEFAULT_GID 1000
 #endif
 
-#define VOLCANO_DEFAULT_COLOR 0xffffff
-#define VOLCANO_DEFAULT_MODE "norm"
-#define VOLCANO_DEFAULT_PORT 65226
+#define VLC_DEFAULT_COLOR 0xffffff
+#define VLC_DEFAULT_MODE "norm"
+#define VLC_DEFAULT_PORT 65226
 
 
-struct config_t {
+struct vlc_config_t {
   char *kmap_file;
   char *socket_file;
   char *init_mode;
@@ -39,12 +39,12 @@ struct config_t {
 };
 
 // Returns config instance
-struct config_t *config_get(void);
+struct vlc_config_t *vlc_config_get(void);
 // Initializes the configuration
-void config_init(const char *rcfname);
+void vlc_config_init(const char *rcfname);
 // Reads the config from filename
-void config_read(const char *rcfname);
+void vlc_config_read(const char *rcfname);
 // Parses an incoming command and acts accordingly
-// Returns status of the action (`OK` on success, other status otherwise)
+// Returns status of the action (`VLC_OK` on success, other status otherwise)
 
 #endif
