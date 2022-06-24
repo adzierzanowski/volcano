@@ -147,11 +147,11 @@ int main(int argc, const char *argv[]) {
   libusb_device_handle *kbdh = NULL;
 
   if (mode && strcmp(mode, "list") == 0) {
-    kbd_print_modes();
+    vlc_kbd_print_modes();
     return 0;
   }
 
-  if (!kbd_open(&ctx, &kbdh)) {
+  if (!vlc_kbd_open(&ctx, &kbdh)) {
     return 1;
   }
 
@@ -164,53 +164,53 @@ int main(int argc, const char *argv[]) {
 
   if (command) {
     if (strcmp(command, "clear-m1") == 0) {
-      for (int i = 0; i < keys_sz; i++) {
-        kbd_set_key_color(kbdh, kcolor_keys[i].val, 0);
+      for (int i = 0; i < vlc_keys_sz; i++) {
+        vlc_kbd_set_key_color(kbdh, vlc_kcolor_keys[i].val, 0);
       }
     } else if (strcmp(command, "clear") == 0) {
-      kbd_set_color(kbdh, 0, 0, 0);
+      vlc_kbd_set_color(kbdh, 0, 0, 0);
     } else {
-      dlog(LOG_ERROR, "Command not recognized\n");
+      vlc_log(VLC_LOG_ERROR, "Command not recognized\n");
     }
 
   } else if (set_color) {
-    kbd_set_color(kbdh, r, g, b);
+    vlc_kbd_set_color(kbdh, r, g, b);
 
   } else if (keyname) {
-    const struct kbd_key_t *key = kbd_get_key(keyname);
+    const struct vlc_kbd_key_t *key = vlc_kbd_get_key(keyname);
 
     if (key) {
-      kbd_set_key_color(kbdh, key->val, color);
+      vlc_kbd_set_key_color(kbdh, key->val, color);
     } else {
-      dlog(LOG_ERROR, "Key %s not found\n", keyname);
+      vlc_log(VLC_LOG_ERROR, "Key %s not found\n", keyname);
     }
   } else if (mode) {
-    kbd_set_mode(kbdh, kbd_get_mode(mode));
+    vlc_kbd_set_mode(kbdh, vlc_kbd_get_mode(mode));
 
   } else if (rainbow_passed) {
-    kbd_set_rainbow(kbdh, rainbow);
+    vlc_kbd_set_rainbow(kbdh, rainbow);
 
   } else if (remap) {
-    struct kbd_keymap_t kmap;
+    struct vlc_kbd_keymap_t kmap;
     FILE *f = fopen(remap_fname, "rb");
-    fread(&kmap, sizeof (struct kbd_keymap_t), 1, f);
+    fread(&kmap, sizeof (struct vlc_kbd_keymap_t), 1, f);
     fclose(f);
 
-    kbd_remap(kbdh, &kmap);
+    vlc_kbd_remap(kbdh, &kmap);
 
   } else if (brightness_passed) {
-    kbd_set_brightness(kbdh, brightness);
+    vlc_kbd_set_brightness(kbdh, brightness);
 
   } else if (direction_passed) {
-    kbd_set_direction(kbdh, direction);
+    vlc_kbd_set_direction(kbdh, direction);
 
   } else if (speed_passed) {
-    kbd_set_speed(kbdh, speed);
+    vlc_kbd_set_speed(kbdh, speed);
 
   } else if (reprate_passed) {
-    kbd_set_report_rate(kbdh, reprate);
+    vlc_kbd_set_report_rate(kbdh, reprate);
   }
 
-  kbd_close(ctx, kbdh);
+  vlc_kbd_close(ctx, kbdh);
   return 0;
 }

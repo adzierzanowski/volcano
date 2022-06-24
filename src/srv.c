@@ -1,10 +1,10 @@
 #include "srv.h"
 
 
-static struct config_t *cfg;
+static struct vlc_config_t *cfg;
 
 static void srv_on_exit() {
-  dlog(LOG_INFO, "[Exit] Quitting volcano server.\n");
+  vlc_log(VLC_LOG_INFO, "[Exit] Quitting volcano server.\n");
 }
 
 static void sigint_handler(int arg) {
@@ -16,17 +16,17 @@ int main(int argc, const char *argv[]) {
   atexit(srv_on_exit);
   signal(SIGINT, sigint_handler);
 
-  dlog(LOG_ALWAYS, "volcanosrv version %s.\n", VERSION);
+  vlc_log(VLC_LOG_ALWAYS, "volcanosrv version %s.\n", VERSION);
 
-  cfg = config_get();
-  config_init(argc < 2 ? NULL : argv[1]);
+  cfg = vlc_config_get();
+  vlc_config_init(argc < 2 ? NULL : argv[1]);
 
   for (int i = 0; i < argc; i++) {
-    dlog(LOG_DEBUG, "argv[%d]=%s\n", i, argv[i]);
+    vlc_log(VLC_LOG_DEBUG, "argv[%d]=%s\n", i, argv[i]);
   }
 
-  dlog(LOG_INFO, "Starting volcano server at http://localhost:%hu\n", cfg->srv_port);
-  dlog(LOG_DEBUG, "Server assets path: %s\n", cfg->srv_data);
+  vlc_log(VLC_LOG_INFO, "Starting volcano server at http://localhost:%hu\n", cfg->srv_port);
+  vlc_log(VLC_LOG_DEBUG, "Server assets path: %s\n", cfg->srv_data);
 
   int s = socket(AF_INET, SOCK_STREAM, 0);
   int one = 1;
@@ -40,8 +40,8 @@ int main(int argc, const char *argv[]) {
 
   for (;;) {
     int sock = accept(s, NULL, NULL);
-    char buf[BUFSZ] = {0};
-    recv(sock, buf, BUFSZ, 0);
+    char buf[VLC_BUFSZ] = {0};
+    recv(sock, buf, VLC_BUFSZ, 0);
     char *method = strtok(buf, " ");
     if (method == NULL) {
       close(sock);
@@ -53,21 +53,21 @@ int main(int argc, const char *argv[]) {
       continue;
     }
 
-    dlog(LOG_INFO, "%s %s\n", method, path);
+    vlc_log(VLC_LOG_INFO, "%s %s\n", method, path);
 
     char *header = strtok(NULL, "\n");
     while (strcmp(header, "\r")) {
-      dlog(LOG_SILLY, "[Header] %s\n", header);
+      vlc_log(VLC_LOG_SILLY, "[Header] %s\n", header);
       header = strtok(NULL, "\n");
     }
 
     char *body = strtok(NULL, "");
-    dlog(LOG_SILLY, "[Body] %s\n", body);
+    vlc_log(VLC_LOG_SILLY, "[Body] %s\n", body);
 
     size_t response_size = 0;
     char *response = handle_request(method, path, body, &response_size);
 
-    dlog(LOG_SILLY, "Sending response:\n\n%s\n\n", response);
+    vlc_log(VLC_LOG_SILLY, "Sending response:\n\n%s\n\n", response);
     send(sock, response, response_size, 0);
     close(sock);
     free(response);
@@ -82,9 +82,9 @@ const char *http_get_mimetype(const char *path) {
   }
 
   size_t spathsz = 0;
-  char ppath[SMALLBUFSZ] = {0};
+  char ppath[VLC_SMALLBUFSZ] = {0};
   sprintf(ppath, "%s", path);
-  char **spath = strsplit(ppath, &spathsz, ".");
+  char **spath = vlc_strsplit(ppath, &spathsz, ".");
 
   char *ext = spath[spathsz-1];
 
@@ -104,13 +104,13 @@ const char *http_get_mimetype(const char *path) {
     mime = "text/plain";
   }
 
-  strsplit_free(spath, spathsz);
+  vlc_strsplit_free(spath, spathsz);
 
   return mime;
 }
 
 char *http_make_api_response(int status, const char *json_msg, size_t *ressz) {
-  char body[SMALLBUFSZ] = {0};
+  char body[VLC_SMALLBUFSZ] = {0};
   sprintf(
     body,
     "{\"status\": \"%s\", \"msg\": \"%s\"}",
@@ -129,8 +129,8 @@ char *http_make_response(
     size_t *ressz) {
   const size_t body_size = bodysz == NULL ? strlen((char *) body) : *bodysz;
 
-  char *res = calloc(BUFSZ, sizeof (char));
-  char header[SMALLBUFSZ] = {0};
+  char *res = calloc(VLC_BUFSZ, sizeof (char));
+  char header[VLC_SMALLBUFSZ] = {0};
 
   sprintf(header,
     "HTTP/1.1 %d %s\r\n"
@@ -156,7 +156,7 @@ char *http_make_response(
 const char *http_status_str(int status) {
   switch (status) {
     case 200:
-      return "OK";
+      return "VLC_OK";
     case 400:
       return "Bad Request";
     case 404:
@@ -182,23 +182,23 @@ char *handle_request(char *method, char *path, char *body, size_t *ressz) {
 }
 
 char *handle_request_get(char *path, size_t *ressz) {
-  dlog(LOG_DEBUG, "Handling GET request\n");
-  if (strmatch(path,
+  vlc_log(VLC_LOG_DEBUG, "Handling GET request\n");
+  if (vlc_strmatch(path,
     "/", "/kmap", "/favicon.ico", "/main.css", "/index.js", "/kmap.js",
     "/volcano.js", "/keys.json",
     NULL)) {
-    char fpath[SMALLBUFSZ] = {0};
+    char fpath[VLC_SMALLBUFSZ] = {0};
     if (strcmp(path, "/") == 0) {
       sprintf(fpath, "%s/index.html", cfg->srv_data);
 
-    } else if (strmatch(path, "/kmap", NULL)) {
+    } else if (vlc_strmatch(path, "/kmap", NULL)) {
       sprintf(fpath, "%s/%s.html", cfg->srv_data, path);
 
     } else {
       sprintf(fpath, "%s%s", cfg->srv_data, path);
     }
 
-    dlog(LOG_DEBUG, "File request: %s\n", fpath);
+    vlc_log(VLC_LOG_DEBUG, "File request: %s\n", fpath);
 
     FILE *f = fopen(fpath, "rb");
     if (f == NULL) {
@@ -207,8 +207,8 @@ char *handle_request_get(char *path, size_t *ressz) {
     }
     // Subtracting some bytes to silence GCC warning about sprintfing
     // potentially larger buffer than dst size
-    char fbuf[BUFSZ-256] = {0};
-    size_t readsz = fread(fbuf, sizeof (uint8_t), BUFSZ-256, f);
+    char fbuf[VLC_BUFSZ-256] = {0};
+    size_t readsz = fread(fbuf, sizeof (uint8_t), VLC_BUFSZ-256, f);
     fclose(f);
 
     return http_make_response(
@@ -222,15 +222,15 @@ char *handle_request_get(char *path, size_t *ressz) {
 
 char *handle_request_post(char *path, char *body, size_t *ressz) {
   size_t spathsz = 0;
-  char **spath = strsplit(path, &spathsz, "/");
+  char **spath = vlc_strsplit(path, &spathsz, "/");
 
-  dlog(LOG_DEBUG, "Path tokens:\n");
+  vlc_log(VLC_LOG_DEBUG, "Path tokens:\n");
   for (int i = 0; i < spathsz; i++) {
-    dlog(LOG_DEBUG, "  %s\n", spath[i]);
+    vlc_log(VLC_LOG_DEBUG, "  %s\n", spath[i]);
   }
 
   char *response = dispatch_cmd(spath, spathsz, body, ressz);
-  strsplit_free(spath, spathsz);
+  vlc_strsplit_free(spath, spathsz);
 
   return response;
 }
@@ -241,7 +241,7 @@ bool daemon_send(char *rxbuf, const char *fmt, ...) {
   addr.sun_family = AF_UNIX;
   strcpy(addr.sun_path, cfg->socket_file);
   connect(s, (struct sockaddr *) &addr, sizeof addr);
-  char msg[SMALLBUFSZ] = {0};
+  char msg[VLC_SMALLBUFSZ] = {0};
 
   va_list args;
   va_start(args, fmt);
@@ -253,10 +253,10 @@ bool daemon_send(char *rxbuf, const char *fmt, ...) {
   struct pollfd pfd = { .fd = s, .events = POLLIN };
   int pcnt;
   while ((pcnt = poll(&pfd, 1, 1000)) != 1);
-  recv(s, rxbuf, SMALLBUFSZ, 0);
+  recv(s, rxbuf, VLC_SMALLBUFSZ, 0);
   close(s);
 
-  return strcmp(rxbuf, "OK") == 0;
+  return strcmp(rxbuf, "VLC_OK") == 0;
 }
 
 static char *dispatch_helper(
@@ -266,12 +266,12 @@ static char *dispatch_helper(
   size_t expected_spathsz,
   size_t *ressz) {
   if (spathsz < expected_spathsz-1) {
-    char buf[SMALLBUFSZ] = {0};
+    char buf[VLC_SMALLBUFSZ] = {0};
     sprintf(buf, "%s command needs %zu arguments.", spath[0], expected_spathsz-1);
     return http_make_api_response(400, buf, ressz);
   }
 
-  char cmdbuf[SMALLBUFSZ] = {0};
+  char cmdbuf[VLC_SMALLBUFSZ] = {0};
   for (int i = 0; i < spathsz; i++) {
     strcat(cmdbuf, spath[i]);
     if (i < spathsz - 1) {
@@ -284,7 +284,7 @@ static char *dispatch_helper(
 }
 
 char *dispatch_cmd(char **spath, size_t spathsz, char *body, size_t *ressz) {
-  char rxbuf[SMALLBUFSZ] = {0};
+  char rxbuf[VLC_SMALLBUFSZ] = {0};
 
   if (spathsz == 0) {
     return http_make_api_response(400, "Empty command.", ressz);
@@ -296,7 +296,7 @@ char *dispatch_cmd(char **spath, size_t spathsz, char *body, size_t *ressz) {
   } else if (strcmp(spath[0], "kcolor") == 0) {
     return dispatch_helper(rxbuf, spath, spathsz, 5, ressz);
 
-  } else if (strmatch(spath[0], "rate", "mode", "speed", "brightness", "dir", "rainbow", NULL)) {
+  } else if (vlc_strmatch(spath[0], "rate", "mode", "speed", "brightness", "dir", "rainbow", NULL)) {
     return dispatch_helper(rxbuf, spath, spathsz, 2, ressz);
 
   } else if (strcmp(spath[0], "kmap") == 0) {
@@ -304,7 +304,7 @@ char *dispatch_cmd(char **spath, size_t spathsz, char *body, size_t *ressz) {
       return http_make_api_response(400, "Bad kmap format.", ressz);
     }
 
-    char msg[SMALLBUFSZ] = {0};
+    char msg[VLC_SMALLBUFSZ] = {0};
     int msgptr = 0;
 
     for (int i = 0; i < strlen(body); i++) {

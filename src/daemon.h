@@ -1,8 +1,8 @@
 /* Daemon which listens on a UNIX socket for commands and sends them to the
    keyboard. */
 
-#ifndef DAEMON_H
-#define DAEMON_H
+#ifndef VLC_DAEMON_H
+#define VLC_DAEMON_H
 
 #include <errno.h>
 #include <fcntl.h>
@@ -27,52 +27,52 @@
 #include "version.h"
 
 
-enum status_t {
-  OK = 0,
-  ERR_KH_NULL,
-  ERR_CMD_NULL,
-  ERR_CMD_UNKNOWN,
-  ERR_CMD_ARGS_MISSING,
-  ERR_CMD_ARGS_RANGE,
-  ERR_MODE_UNKNOWN,
-  ERR_KBD_CLAIM,
-  ERR_KBD_RELEASE,
-  ERR_KBD_KMAP,
-  ERR_KBD_MODE,
-  ERR_KBD_BRIGHTNESS,
-  ERR_KBD_DIR,
-  ERR_KBD_RAINBOW,
-  ERR_KBD_RATE,
-  ERR_KBD_COLOR,
-  ERR_KBD_KCOLOR,
-  ERR_KBD_SPEED,
-  ERR_KMAP_READ,
-  ERR_KEY_UNKNOWN
+enum vlc_status_t {
+  VLC_OK = 0,
+  VLC_ERR_KH_NULL,
+  VLC_ERR_CMD_NULL,
+  VLC_ERR_CMD_UNKNOWN,
+  VLC_ERR_CMD_ARGS_MISSING,
+  VLC_ERR_CMD_ARGS_RANGE,
+  VLC_ERR_MODE_UNKNOWN,
+  VLC_ERR_KBD_CLAIM,
+  VLC_ERR_KBD_RELEASE,
+  VLC_ERR_KBD_KMAP,
+  VLC_ERR_KBD_MODE,
+  VLC_ERR_KBD_BRIGHTNESS,
+  VLC_ERR_KBD_DIR,
+  VLC_ERR_KBD_RAINBOW,
+  VLC_ERR_KBD_RATE,
+  VLC_ERR_KBD_COLOR,
+  VLC_ERR_KBD_KCOLOR,
+  VLC_ERR_KBD_SPEED,
+  VLC_ERR_KMAP_READ,
+  VLC_ERR_KEY_UNKNOWN
 };
 
 
 // Forks to a control panel server if needed
 int main(int argc, const char *argv[]);
 // Real main routine
-int daemon_main(int argc, const char *argv[]);
+int vlc_daemon_main(int argc, const char *argv[]);
 
 // Detaches kernel driver and claim the certain USB interface
 // Returns `true` on success, `false` otherwise
-bool kbd_claim(void);
+bool vlc_kbd_claim(void);
 // Releases the control of the keyboard back to the system
 // Returns `true` on success, `false` otherwise
-bool kbd_release(void);
+bool vlc_kbd_release(void);
 
 // Creates and returns a UNIX socket for listening for the commands
-int create_socket(void);
+int vlc_daemon_create_socket(void);
 // Handles USB hotplug
-int hotplug_handler(
+int vlc_hotplug_handler(
   struct libusb_context *ctx,
   struct libusb_device *dev,
   libusb_hotplug_event event,
   void *user_data);
-enum status_t parse_command(char *cmdbuf);
+enum vlc_status_t vlc_daemon_parse_command(char *cmdbuf);
 // Returns a short explanation of a status code
-const char *status_str(enum status_t status);
+const char *vlc_status_str(enum vlc_status_t status);
 
 #endif

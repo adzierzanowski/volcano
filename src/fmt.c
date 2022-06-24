@@ -1,29 +1,29 @@
 #include "fmt.h"
 
 
-static enum loglevel_t log_level = LOG_DEBUG;
+static enum vlc_loglevel_t log_level = VLC_LOG_DEBUG;
 static bool log_colored = false;
 
 
-void print_libusb_err(int status) {
-  dlog(LOG_ERROR, "[libusb] %s\n", libusb_error_name(status));
+void vlc_print_libusb_err(int status) {
+  vlc_log(VLC_LOG_ERROR, "[libusb] %s\n", libusb_error_name(status));
 }
 
-const char *loglevelstr(enum loglevel_t level) {
+const char *vlc_loglevelstr(enum vlc_loglevel_t level) {
   switch (level) {
-    case LOG_ALWAYS:  return "     ";
-    case LOG_ERROR:   return "ERROR";
-    case LOG_WARNING: return "WARN ";
-    case LOG_INFO:    return "INFO ";
-    case LOG_DEBUG:   return "DEBUG";
-    case LOG_SILLY:   return "SILLY";
+    case VLC_LOG_ALWAYS:  return "     ";
+    case VLC_LOG_ERROR:   return "ERROR";
+    case VLC_LOG_WARNING: return "WARN ";
+    case VLC_LOG_INFO:    return "INFO ";
+    case VLC_LOG_DEBUG:   return "DEBUG";
+    case VLC_LOG_SILLY:   return "SILLY";
   }
   return "NONE ";
 }
 
-void dlog(enum loglevel_t level, const char *fmt, ...) {
+void vlc_log(enum vlc_loglevel_t level, const char *fmt, ...) {
   static bool self_name_ready = false;
-  static char self_name[SMALLBUFSZ] = {0};
+  static char self_name[VLC_SMALLBUFSZ] = {0};
 
   if (level <= log_level) {
     time_t t = time(NULL);
@@ -33,16 +33,16 @@ void dlog(enum loglevel_t level, const char *fmt, ...) {
 
     if (!self_name_ready) {
   #if defined(__APPLE__)
-      proc_name(pid, self_name, SMALLBUFSZ);
+      proc_name(pid, self_name, VLC_SMALLBUFSZ);
 
   #elif defined(__linux__)
-      char procfile[SMALLBUFSZ] = {0};
+      char procfile[VLC_SMALLBUFSZ] = {0};
       sprintf(procfile, "/proc/%d/comm", pid);
       FILE *f = fopen(procfile, "r");
       if (f == NULL) {
         sprintf(self_name, "%d", pid);
       } else {
-        size_t nread = fread(self_name, sizeof (char), SMALLBUFSZ, f);
+        size_t nread = fread(self_name, sizeof (char), VLC_SMALLBUFSZ, f);
         fclose(f);
 
         // Remove newline char
@@ -72,7 +72,7 @@ void dlog(enum loglevel_t level, const char *fmt, ...) {
       tm.tm_min,
       tm.tm_sec,
       self_name,
-      loglevelstr(level));
+      vlc_loglevelstr(level));
     vfprintf(stderr, fmt, args);
     va_end(args);
     if (log_colored) {
@@ -81,15 +81,15 @@ void dlog(enum loglevel_t level, const char *fmt, ...) {
   }
 }
 
-void set_loglevel(enum loglevel_t level) {
+void vlc_set_loglevel(enum vlc_loglevel_t level) {
   log_level = level;
 }
 
-void set_logcolor(bool do_color) {
+void vlc_set_logcolor(bool do_color) {
   log_colored = do_color;
 }
 
-bool strmatch(char *str, ...) {
+bool vlc_strmatch(char *str, ...) {
   va_list args;
   va_start(args, str);
   const char *tok = va_arg(args, const char *);
@@ -104,7 +104,7 @@ bool strmatch(char *str, ...) {
   return false;
 }
 
-char **strsplit(char *str, size_t *outsz, const char *delim) {
+char **vlc_strsplit(char *str, size_t *outsz, const char *delim) {
   if (str == NULL) return NULL;
 
   *outsz = 0;
@@ -123,7 +123,7 @@ char **strsplit(char *str, size_t *outsz, const char *delim) {
   return out;
 }
 
-void strsplit_free(char **sstr, size_t sstrsz) {
+void vlc_strsplit_free(char **sstr, size_t sstrsz) {
   for (int i = 0; i < sstrsz; i++) {
     free(sstr[i]);
   }
