@@ -1,9 +1,9 @@
 #ifndef VLC_VERSION_H
 #define VLC_VERSION_H
 
-#define VLC_VERSION "1.1.5"
+#define VLC_VERSION "1.1.6"
 #define VLC_VERSION_MAJOR 1
 #define VLC_VERSION_MINOR 1
-#define VLC_VERSION_PATCH 5
+#define VLC_VERSION_PATCH 6
 
 #endif

@@ -554,7 +554,6 @@ enum vlc_status_t vlc_daemon_parse_command(char *cmdbuf) {
       return VLC_ERR_CMD_ARGS_MISSING;
     }
 
-    // TODO: setting direction fails
     enum vlc_kbd_dir_t dir = atoi(tok);
     if (dir < 0 || dir > 1) {
       vlc_log(VLC_LOG_WARNING, "Direction not in range (0, 1).\n");
@@ -594,7 +593,33 @@ enum vlc_status_t vlc_daemon_parse_command(char *cmdbuf) {
       return VLC_ERR_KBD_RAINBOW;
     }
     if (!vlc_kbd_release()) return VLC_ERR_KBD_RELEASE;
+
     return VLC_OK;
+
+  } else if (strcmp(tok, "gradient") == 0) {
+    tok = strtok(NULL, delim);
+
+    if (tok == NULL) {
+      vlc_log(VLC_LOG_WARNING, "Gradient command without an argument.\n");
+      return VLC_ERR_CMD_ARGS_MISSING;
+    }
+
+    int gradient = atoi(tok);
+    if (gradient < 0 || gradient > 3) {
+      vlc_log(VLC_LOG_WARNING, "Invalid argument for gradient command.\n");
+      return VLC_ERR_CMD_ARGS_RANGE;
+    }
+
+    vlc_log(VLC_LOG_INFO, "Setting gradient to: %s.\n", tok);
+    if (!vlc_kbd_claim()) return VLC_ERR_KBD_CLAIM;
+    if (!vlc_kbd_set_gradient(kbdh, gradient)) {
+      vlc_kbd_release();
+      return VLC_ERR_KBD_GRADIENT;
+    }
+    if (!vlc_kbd_release()) return VLC_ERR_KBD_RELEASE;
+
+    return VLC_OK;
+
   }
 
   vlc_log(VLC_LOG_WARNING, "Unknown command: %s\n", cmdbuf);
@@ -643,6 +668,8 @@ const char *vlc_status_str(enum vlc_status_t status) {
       return "Failed to set report rate.";
     case VLC_ERR_KBD_SPEED:
       return "Failed to set animation speed.";
+    case VLC_ERR_KBD_GRADIENT:
+      return "Failed to set the gradient color.";
     default:
       return "Unknown error.";
   }

@@ -187,6 +187,13 @@ enum vlc_kbd_dir_t {
   VLC_DIR2 = 0x01,
 };
 
+enum vlc_kbd_gradient_t {
+  VLC_GRADIENT_RED = 0x00,
+  VLC_GRADIENT_ORANGE = 0x01,
+  VLC_GRADIENT_GREEN = 0x02,
+  VLC_GRADIENT_BLUE = 0x03,
+};
+
 
 // Functions that return `bool` return `true` if successful, `false` otherwise
 // This is different from libusb functions that reside underneath as they
@@ -255,6 +262,9 @@ bool vlc_kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
 
 // Sets the color mode of the keyboard (see `vlc_kbd_mode_t` for available values)
 bool vlc_kbd_set_mode(libusb_device_handle *kbdh, enum vlc_kbd_mode_t mode);
+
+// Sets the gradient color in the gradient color mode
+bool vlc_kbd_set_gradient(libusb_device_handle *kbdh, enum vlc_kbd_gradient_t gradient);
 
 
 // Prints out all of the available color modes

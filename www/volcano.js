@@ -12,16 +12,19 @@ const miscSettings = {
   brightness: 0,
   direction: 0,
   reprate: 0,
+  gradient: 0,
 };
 
-const miscIds = ['rainbow', 'speed', 'brightness', 'direction', 'reprate'];
+const miscIds = [
+  'rainbow', 'speed', 'brightness', 'direction', 'reprate', 'gradient'];
 
 const miscApply = async () => {
   try {
     await sendCmdPromise(`/rainbow/${miscSettings.rainbow.toString()}/`);
     await sendCmdPromise(`/speed/${miscSettings.speed}/`);
     await sendCmdPromise(`/brightness/${miscSettings.brightness}/`);
-    //await sendCmdPromise(`/dir/${miscSettings.direction}/`);
+    await sendCmdPromise(`/dir/${miscSettings.direction}/`);
+    await sendCmdPromise(`/gradient/${miscSettings.gradient}/`);
     const msg = await sendCmdPromise(`/rate/${miscSettings.reprate}/`);
     document.getElementById('status').style.color = 'green';
     document.getElementById('status').innerText = `misc settings: ${msg}`;
@@ -50,12 +53,14 @@ const updateMiscSettings = () => {
   const brightness = document.getElementById('brightness');
   const direction = document.getElementById('direction');
   const reprate = document.getElementById('reprate');
+  const gradient = document.getElementById('gradient');
 
   miscSettings.rainbow = rainbow.checked;
   miscSettings.speed = speed.value;
   miscSettings.brightness = brightness.value;
   miscSettings.direction = direction.value;
   miscSettings.reprate = Math.pow(2, parseInt(reprate.value)) * 125;
+  miscSettings.gradient = gradient.value;
 
   miscIds.forEach(id => {
     const val = miscSettings[id];

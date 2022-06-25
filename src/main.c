@@ -17,6 +17,7 @@ void usage() {
     "OPTIONS:\n"
     "    -B (0-4)       set brightness (0-4)\n"
     "    -D (0-1)       set direction (0-1)\n"
+    "    -G (0-3)       set gradient (0-3)\n"
     "    -S (0-4)       set speed\n"
     "    -R (0-1)       set rainbow\n"
     "    -H (0-3)       set report rate (0-3; 125 Hz - 1000 Hz)\n"
@@ -72,9 +73,12 @@ int main(int argc, const char *argv[]) {
   bool speed_passed = false;
   uint8_t reprate = 0;
   bool reprate_passed = false;
+  bool gradient_passed = false;
+  uint8_t gradient = 0;
 
 
-  while ((opt = getopt(argc, (char * const *) argv, "b:B:cC:D:g:hH:k:m:M:r:R:S:")) != -1) {
+  while ((opt = getopt(
+    argc, (char * const *) argv, "b:B:cC:D:G:g:hH:k:m:M:r:R:S:")) != -1) {
     switch (opt) {
       case 'B':
         brightness_passed = true;
@@ -84,6 +88,11 @@ int main(int argc, const char *argv[]) {
       case 'D':
         direction_passed = true;
         direction = atoi(optarg);
+        break;
+
+      case 'G':
+        gradient_passed = true;
+        gradient = atoi(optarg);
         break;
 
       case 'S':
@@ -209,6 +218,8 @@ int main(int argc, const char *argv[]) {
 
   } else if (reprate_passed) {
     vlc_kbd_set_report_rate(kbdh, reprate);
+  } else if (gradient_passed) {
+    vlc_kbd_set_gradient(kbdh, gradient);
   }
 
   vlc_kbd_close(ctx, kbdh);

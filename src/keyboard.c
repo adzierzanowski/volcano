@@ -564,3 +564,12 @@ bool vlc_kbd_set_direction(libusb_device_handle *kbdh, enum vlc_kbd_dir_t dir) {
   if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
+
+bool vlc_kbd_set_gradient(libusb_device_handle *kbdh, enum vlc_kbd_gradient_t gradient) {
+  if (!vlc_kbd_send_start(kbdh)) return false;
+  if (!vlc_kbd_va_send_and_recv(
+      kbdh, 9, 0x04, gradient+0x18, 0x00, 0x06, 0x01, 0x11, 0x00, 0x00, gradient
+  )) return false;
+  if (!vlc_kbd_send_end(kbdh)) return false;
+  return true;
+}
