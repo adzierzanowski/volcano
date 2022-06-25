@@ -100,17 +100,25 @@ void vlc_srv_serve(int srv_socket) {
 
   for (;;) {
     // The srv_socket has the non-blocking flag set
-    int rq_sock = accept(srv_socket, NULL, NULL);
-    if (rq_sock == -1) {
+    struct pollfd pfd = { .fd = srv_socket, .events = POLLIN };
+    while (poll(&pfd, 1, VLC_SOCKET_TIMEOUT) != 1) {
       if (!running) {
         return;
       }
+    }
+
+    int rq_sock = accept(srv_socket, NULL, NULL);
+    if (rq_sock == -1) {
+      vlc_log(
+        VLC_LOG_WARNING,
+        "Failed to accept a request socket: %s\n",
+        strerror(errno));
       continue;
     }
 
     // Await the data
-    struct pollfd pfd = { .fd = rq_sock, .events = POLLIN };
-    while (poll(&pfd, 1, 1000) != 1) {
+    pfd.fd = rq_sock;
+    while (poll(&pfd, 1, VLC_SOCKET_TIMEOUT) != 1) {
       if (!running) {
         close(rq_sock);
         return;
@@ -343,8 +351,7 @@ bool vlc_srv_daemon_send(char *rxbuf, const char *fmt, ...) {
 
   // Await response
   struct pollfd pfd = { .fd = dsock, .events = POLLIN };
-  int pcnt;
-  while ((pcnt = poll(&pfd, 1, 1000)) != 1);
+  while (poll(&pfd, 1, VLC_SOCKET_TIMEOUT) != 1);
   recv(dsock, rxbuf, VLC_SMALLBUFSZ, 0);
   close(dsock);
 

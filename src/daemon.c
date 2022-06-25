@@ -17,8 +17,6 @@ static libusb_device_handle *kbdh = NULL;
 
 static struct sockaddr_un addr;
 
-// Timeout for libusb polling
-static struct timeval timeout = { .tv_usec = 100000 };
 
 // Default keyboard remapper
 static bool remap(const char *fname) {
@@ -34,7 +32,9 @@ static bool remap(const char *fname) {
 }
 
 // Sends initial configuration commands to the keyboard when hotplugged
-static void on_hotplug(void) {
+static void on_hotplug() {
+  static bool first_call = true;
+
   if (kbdh) {
     vlc_kbd_claim();
     vlc_log(VLC_LOG_INFO, "[Hotplug] Remapping keys.\n");
@@ -49,6 +49,8 @@ static void on_hotplug(void) {
     vlc_kbd_set_color(
       kbdh, cfg->init_color >> 16, cfg->init_color >> 8, cfg->init_color);
     vlc_kbd_release();
+  } else if (first_call) {
+    first_call = false;
   } else {
     vlc_log(
       VLC_LOG_ERROR,
@@ -159,8 +161,10 @@ int vlc_daemon_main(int argc, const char *argv[]) {
   dsock = vlc_daemon_create_socket();
   vlc_log(VLC_LOG_INFO, "Socket created: fd=%d\n", dsock);
 
+  struct timeval timeout = { .tv_usec = 100000 };
+
   for (;;) {
-    libusb_handle_events_timeout_completed(ctx, &timeout, NULL);
+    libusb_handle_events_timeout(ctx, &timeout);
     socklen_t len;
 
     if (kbd_hotplugged) {
@@ -188,8 +192,6 @@ int vlc_daemon_main(int argc, const char *argv[]) {
       send(rsock, vlc_status_str(status), strlen(vlc_status_str(status)), 0);
       close(rsock);
     }
-
-    usleep(100000);
   }
 
   return 0;

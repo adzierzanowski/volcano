@@ -24,6 +24,7 @@
 #define VLC_DEFAULT_MODE "norm"
 #define VLC_DEFAULT_PORT 65226
 
+#define VLC_SOCKET_TIMEOUT 1000
 
 struct vlc_config_t {
   char *kmap_file;
