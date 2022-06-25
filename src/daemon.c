@@ -226,7 +226,7 @@ int vlc_daemon_create_socket() {
 
   int status = bind(s, (struct sockaddr *) &addr, addrsz);
   if (status != 0) {
-    vlc_log(VLC_LOG_ERROR, "Failed to bind to the socket.\n");
+    vlc_log(VLC_LOG_ERROR, "Failed to bind to the socket: %s\n", strerror(errno));
     exit(1);
   }
 

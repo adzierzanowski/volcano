@@ -35,7 +35,7 @@ a little bit more powerful and easier to use.
 - [Daemon](#daemon)
   - [Installation](#installation)
     - [Build](#build)
-    - [Configuration](#configuration)
+    - [Configuration file](#configuration-file)
     - [Installing the daemon: macOS launchctl](#installing-the-daemon-macos-launchctl)
     - [Installing the daemon: Linux](#installing-the-daemon-linux)
   - [Daemon Socket Commands](#daemon-socket-commands)
@@ -128,36 +128,40 @@ The resulting executables will be created in the `./bin` folder:
 * `volcanosrv` - the web control panel server communicating with the daemon
 * `volcanoctl` - a shell script which opens the control panel (assuming it uses the default port `65226`)
 
-### Configuration
+### Configuration file
 
 Create `.volcanorc` file with basic configuration:
 
 ```conf
+LOG_LEVEL=1
+LOG_COLOR=0
 SOCKET_FILE=/Users/user/.volcano.sock
 SOCKET_UID=501
 SOCKET_GID=20
 KMAP_FILE=/Users/user/kmap.dat
 INIT_MODE=ripple
 INIT_COLOR=00ffff
-LOGLEVEL=1
 SRV_ENABLE=1
 SRV_PORT=65226
 SRV_DATA=/Users/user/volcano/www
 SRV_EXE=/Users/user/volcano/bin/volcanosrv
 ```
 
-| Key           | Description                                                  |
-|---------------|--------------------------------------------------------------|
-| `SOCKET_FILE` | Socket file path for inter-process communication             |
-| `SOCKET_UID`  | Socket owner user ID (should be you)                         |
-| `SOCKET_GID`  | Socket owner group ID                                        |
-| `KMAP_FILE`   | Keymap file loaded on keyboard hotplug                       |
-| `INIT_MODE`   | Initial color scheme after plugging                          |
-| `INIT_COLOR`  | Initial color                                                |
-| `LOGLEVEL`    | Logging verbosity (`0`=ERROR, `1`=WARN, `2`=INFO, `3`=DEBUG, `4`=SILLY) |
-| `SRV_ENABLE`  | Enable locally hosted www control panel                      |
-| `SRV_PORT`    | Port at which the control panel is server                    |
-| `SRV_DATA`    | Path to the control panel assets                             |
+| Key           | Description                                                  | Default                         |
+|---------------|--------------------------------------------------------------|---------------------------------|
+| `LOG_LEVEL`   | Logging verbosity (`0`=ERROR, `1`=WARN, `2`=INFO, `3`=DEBUG, `4`=SILLY) | `3`                  |
+| `LOG_COLOR`   | Boolean flag. If set, the logs are colored with ANSI codes   | `0`                             |
+| `SOCKET_FILE` | Socket file path for inter-process communication             | `$HOME/.volcano.sock`           |
+| `SOCKET_UID`  | Socket owner user ID (should be you)                         | `501` on macOS, `1000` on Linux |
+| `SOCKET_GID`  | Socket owner group ID                                        | `20` on macOS, `1000` on Linux  |
+| `KMAP_FILE`   | Keymap file loaded on keyboard hotplug                       | None                            |
+| `INIT_MODE`   | Initial color scheme after plugging                          | `norm`                          |
+| `INIT_COLOR`  | Initial color                                                | `0xffffff`                      |
+| `SRV_ENABLE`  | Enable locally hosted www control panel                      | `1`                             |
+| `SRV_PORT`    | Port at which the control panel is server                    | `65226`                         |
+| `SRV_DATA`    | Path to the control panel assets                             | `$BINPATH/www`*                 |
+
+\* The path of the running executable
 
 ### Installing the daemon: macOS launchctl
 
