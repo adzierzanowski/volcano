@@ -26,6 +26,7 @@
 
 #define VLC_SOCKET_TIMEOUT 1000
 
+
 struct vlc_config_t {
   char *kmap_file;
   char *socket_file;
@@ -39,13 +40,15 @@ struct vlc_config_t {
   bool srv_enable;
 };
 
+
 // Returns config instance
 struct vlc_config_t *vlc_config_get(void);
+
 // Initializes the configuration
 void vlc_config_init(const char *rcfname);
+
 // Reads the config from filename
 void vlc_config_read(const char *rcfname);
-// Parses an incoming command and acts accordingly
-// Returns status of the action (`VLC_OK` on success, other status otherwise)
+
 
 #endif

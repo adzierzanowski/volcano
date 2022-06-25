@@ -19,6 +19,7 @@
 #define VLC_CTL_INTERFACE 0x01
 #define VLC_CTL_ENDPOINT 0x82
 
+
 // Structure containing a key name and its code used for color mapping
 struct vlc_kbd_key_t {
   const char *name;
@@ -194,58 +195,79 @@ enum vlc_kbd_dir_t {
 // Initializes libusb context and opens the keyboard device
 // Results are assigned to `ctx` and `kbdh`
 bool vlc_kbd_open(libusb_context **ctx, libusb_device_handle **kbdh);
+
 // Closes the keyboard device handle and deinitializes libusb
 bool vlc_kbd_close(libusb_context *ctx, libusb_device_handle *kbdh);
 
+
 // Sends a 64-byte data frame via USB control transfer to the keyboard
 bool vlc_kbd_send(libusb_device_handle *kbdh, uint8_t msg[64]);
+
 // Receives a response from the keyboard via USB bulk transfer
 // Stores the `sz` bytes of the response in `buf`
 bool vlc_kbd_recv(
   libusb_device_handle *kbdh, size_t sz, uint8_t *buf, unsigned int timeout);
+
 // Sends a 64-byte data fram to the keyboard then awaits a response
 // and validates it
 bool vlc_kbd_send_and_recv(libusb_device_handle *kbdh, uint8_t msg[64]);
+
 // Variadic version of the `vlc_kbd_send_and_recv`
 // The message is composed by taking `len` arguments and filling the rest
 // of the 64 bytes with zeros
 bool vlc_kbd_va_send_and_recv(libusb_device_handle *kbdh, size_t len, ...);
 
+
 // Sends the initial data frame which is common for every command (each command
 // consists of the start frame, set of messages and the end frame)
 bool vlc_kbd_send_start(libusb_device_handle *kbdh);
+
 // Sends the end data frame to the keyboard
 bool vlc_kbd_send_end(libusb_device_handle *kbdh);
 
+
 // Remaps the keys as defined in the `kmap` structure
 bool vlc_kbd_remap(libusb_device_handle *kbdh, struct vlc_kbd_keymap_t *kmap);
+
 // Sets the color of a single `key` (specified by code defined in `vlc_kcolor_keys`)
 // The keyboard has to be set to the custom mode first
 // `color` is the usual hexadecimal representation of an RGB value
 bool vlc_kbd_set_key_color(libusb_device_handle *kbdh, uint32_t key, uint32_t color);
+
 // Sets the color of the entire keyboard (works with most of the color modes)
 bool vlc_kbd_set_color(libusb_device_handle *kbdh, uint8_t r, uint8_t g, uint8_t b);
+
 // Sets the keyboard's brightness level (0-4)
 bool vlc_kbd_set_brightness(libusb_device_handle *kbdh, uint8_t level);
+
 // Sets the speed of the animation (0-4) for some of the color modes
 bool vlc_kbd_set_speed(libusb_device_handle *kbdh, uint8_t level);
+
 // Sets the USB report rate (125, 250, 500, or 1000 Hz - see `vlc_kbd_rate_t`)
 bool vlc_kbd_set_report_rate(libusb_device_handle *kbdh, enum vlc_kbd_rate_t rate);
+
 // Sets the direction of the animation for some of the color modes
 // `dir` is a value in range 0-1
 bool vlc_kbd_set_direction(libusb_device_handle *kbdh, enum vlc_kbd_dir_t dir);
+
 // Sets the state of the rainbow mode for some of the color modes
 bool vlc_kbd_set_rainbow(libusb_device_handle *kbdh, bool rainbow);
+
 // Sets the color mode of the keyboard (see `vlc_kbd_mode_t` for available values)
 bool vlc_kbd_set_mode(libusb_device_handle *kbdh, enum vlc_kbd_mode_t mode);
 
+
 // Prints out all of the available color modes
 void vlc_kbd_print_modes(void);
+
 // Reads a binary keymap file and stores the result in the `kmap` struct
 bool vlc_kbd_read_keymap_file(const char *fname, struct vlc_kbd_keymap_t *kmap);
+
 // Returns a color mode code based on a string containing its name
 enum vlc_kbd_mode_t vlc_kbd_get_mode(const char *modestr);
+
 // Returns a key based on its name (some keys can have more than one name)
 const struct vlc_kbd_key_t *vlc_kbd_get_key(const char *name);
+
 
 #endif

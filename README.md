@@ -113,7 +113,7 @@ SRV_EXE=/Users/user/volcano/bin/volcanosrv
 | `KMAP_FILE`   | Keymap file loaded on keyboard hotplug                       |
 | `INIT_MODE`   | Initial color scheme after plugging                          |
 | `INIT_COLOR`  | Initial color                                                |
-| `LOGLEVEL`    | Logging verbosity (`0`=ERROR, `1`=WARN, `2`=INFO, `3`=DEBUG) |
+| `LOGLEVEL`    | Logging verbosity (`0`=ERROR, `1`=WARN, `2`=INFO, `3`=DEBUG, `4`=SILLY) |
 | `SRV_ENABLE`  | Enable locally hosted www control panel                      |
 | `SRV_PORT`    | Port at which the control panel is server                    |
 | `SRV_DATA`    | Path to the control panel assets                             |
@@ -218,8 +218,8 @@ It's almost complete.
 
 Some refactoring is certainly needed.
 
-To sniff USB communication with the original driver I use [Device Monitoring
-Studio](https://www.hhdsoftware.com/device-monitoring-studio).
+To sniff USB communication between the keyboard and the original driver I used
+[Device Monitoring Studio](https://www.hhdsoftware.com/device-monitoring-studio).
 
 ### Implemented things
 
@@ -233,9 +233,8 @@ Studio](https://www.hhdsoftware.com/device-monitoring-studio).
 
 ### TODO
 
-* macros
-* some keycode bugs
-* check if the driver works on Linux
+* defining macros
+* setting the gradient in one of the color modes
 
 ## Other files
 

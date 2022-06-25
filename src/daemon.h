@@ -53,26 +53,34 @@ enum vlc_status_t {
 
 // Forks to a control panel server if needed
 int main(int argc, const char *argv[]);
+
 // Real main routine
 int vlc_daemon_main(int argc, const char *argv[]);
 
 // Detaches kernel driver and claim the certain USB interface
 // Returns `true` on success, `false` otherwise
 bool vlc_kbd_claim(void);
+
 // Releases the control of the keyboard back to the system
 // Returns `true` on success, `false` otherwise
 bool vlc_kbd_release(void);
 
+
 // Creates and returns a UNIX socket for listening for the commands
 int vlc_daemon_create_socket(void);
-// Handles USB hotplug
+
+// Handles the USB hotplug event
 int vlc_hotplug_handler(
   struct libusb_context *ctx,
   struct libusb_device *dev,
   libusb_hotplug_event event,
   void *user_data);
+
+// Parses the incoming command and acts accordingly
 enum vlc_status_t vlc_daemon_parse_command(char *cmdbuf);
+
 // Returns a short explanation of a status code
 const char *vlc_status_str(enum vlc_status_t status);
+
 
 #endif
