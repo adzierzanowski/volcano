@@ -1,11 +1,52 @@
 # Modecom Volcano Lanparty RGB keyboard UNIX userland driver
 
-This is an attempt to modify keyboard state (colors, macros) using macOS because
-the only available drivers are made for Windows.
+This is a driver for the Modecom Volcano Lanparty RGB keyboard. I made it
+because the only available drivers are made for Windows.
 
 The driver also works on Linux (tested on Kubuntu 20.04).
 
+It operates in the userland so the only requirement is to have `sudo`
+permissions.
+
+The driver consists of:
+
+* The keyboard handling library: `src/keyboard.h`
+* The CLI frontend: `src/main.c` -> `volcano`
+* The daemon which is capable of listening to the hotplug events: `src/daemon.c` -> `volcanod`
+* The web control panel for communicating with the daemon: `src/srv.c` -> `volcanosrv`
+
+The daemon and the web panel are of course optional and you can control the
+keyboard using just the main binary `volcano`. Nevertheless, the daemon is
+a little bit more powerful and easier to use.
+
+#### Screenshot of the web control panel
+
 ![](https://i.imgur.com/cwjAgDg.png)
+
+**Table of contents**
+
+- [Modecom Volcano Lanparty RGB keyboard UNIX userland driver](#modecom-volcano-lanparty-rgb-keyboard-unix-userland-driver)
+      - [Screenshot of the web control panel](#screenshot-of-the-web-control-panel)
+- [Building](#building)
+  - [macOS](#macos)
+  - [Ubuntu](#ubuntu)
+  - [Tools](#tools)
+- [Creating keymaps](#creating-keymaps)
+- [Daemon](#daemon)
+  - [Installation](#installation)
+    - [Build](#build)
+    - [Configuration](#configuration)
+    - [Installing the daemon: macOS launchctl](#installing-the-daemon-macos-launchctl)
+    - [Installing the daemon: Linux](#installing-the-daemon-linux)
+  - [Daemon Socket Commands](#daemon-socket-commands)
+- [Main executable usage](#main-executable-usage)
+- [Development](#development)
+  - [Dependecies](#dependecies)
+  - [Development status](#development-status)
+    - [Implemented things](#implemented-things)
+    - [TODO](#todo)
+  - [Other files](#other-files)
+  - [Contributing](#contributing)
 
 # Building
 
@@ -53,10 +94,10 @@ $ python3 -m pip install -r requirements.txt
 
 # Creating keymaps
 
-You can easily create keyboard mappings through web control panel of the
+You can easily create keyboard mappings through the web control panel of the
 daemon.
 
-Another way to Create keymapping is to convert a YAML file to binary file and
+Another way to create a keymapping is to convert a YAML file to binary file and
 then load it using `volcano` or `volcanod` (see *Daemon* section).
 
 ```bash
