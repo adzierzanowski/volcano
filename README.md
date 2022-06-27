@@ -223,6 +223,14 @@ Well, you'll have to find out how to install daemons on Linux yourself.
 | `dir DIR`                | animation direction | 0 <= `DIR` <= 1                                                     |
 | `rate RATE`              | USB report rate     | `RATE` in (125, 250, 500, 1000)                                     |
 
+You can test these commands with, for example, `socat`:
+
+```bash
+$ brew install socat
+$ echo mode matrix - socat - UNIX-CONNECT:/Users/user/.volcano.sock
+VLC_OK
+```
+
 # Main executable usage
 
 ```
