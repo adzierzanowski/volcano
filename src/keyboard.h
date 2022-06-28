@@ -26,6 +26,7 @@ struct vlc_kbd_key_t {
   uint32_t val;
 };
 
+
 // An array of the key codes used for setting a single key color
 const struct vlc_kbd_key_t vlc_kcolor_keys[111];
 const size_t vlc_keys_sz;
@@ -62,7 +63,7 @@ enum vlc_kbd_rate_t {
 };
 
 // Keymap codes (seems similar to USB keycodes)
-enum vlc_kbd_keymap_key_t {
+enum vlc_kbd_keycode_t {
   VLC_KBD_KMAP_MODE_MODAL = 0x01,
   VLC_KBD_KMAP_MODE_NORMAL = 0x02,
 
@@ -153,6 +154,22 @@ enum vlc_kbd_keymap_key_t {
   VLC_KBD_KMAP_LEFT = 0x50,
   VLC_KBD_KMAP_DOWN = 0x51,
   VLC_KBD_KMAP_UP = 0x52,
+};
+
+// Struct representing a single entry in a macro definition
+struct vlc_kbd_macro_entry_t {
+  enum vlc_kbd_keycode_t keycode;
+  uint16_t delay;
+  bool down;
+  bool modifier;
+};
+
+// Struct representing a macro definition
+struct vlc_kbd_macro_t {
+  uint16_t entries_length;
+  uint16_t name_length;
+  struct vlc_kbd_macro_entry_t **entries;
+  uint16_t *name;
 };
 
 // Color mode codes
@@ -279,5 +296,13 @@ enum vlc_kbd_mode_t vlc_kbd_get_mode(const char *modestr);
 // Returns a key based on its name (some keys can have more than one name)
 const struct vlc_kbd_key_t *vlc_kbd_get_key(const char *name);
 
+
+struct vlc_kbd_macro_t *vlc_kbd_macro_new(const char *name);
+uint8_t *vlc_kbd_macro_to_bytes(struct vlc_kbd_macro_t *macro, size_t *sz);
+void vlc_kbd_macro_add_entry(
+  struct vlc_kbd_macro_t *macro, struct vlc_kbd_macro_entry_t *entry);
+struct vlc_kbd_macro_entry_t *vlc_kbd_macro_entry_new(
+  enum vlc_kbd_keycode_t keycode, bool modifier, uint16_t delay, bool down);
+void vlc_kbd_macro_entry_copy(uint8_t *dst, struct vlc_kbd_macro_entry_t *entry);
 
 #endif

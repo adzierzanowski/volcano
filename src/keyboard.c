@@ -573,3 +573,71 @@ bool vlc_kbd_set_gradient(libusb_device_handle *kbdh, enum vlc_kbd_gradient_t gr
   if (!vlc_kbd_send_end(kbdh)) return false;
   return true;
 }
+
+struct vlc_kbd_macro_t *vlc_kbd_macro_new(const char *name) {
+  struct vlc_kbd_macro_t *macro = malloc(sizeof (struct vlc_kbd_macro_t));
+  macro->name_length = strlen(name) + 1;
+  macro->entries_length = 0;
+  macro->entries = NULL;
+  macro->name = calloc(macro->name_length + 1, sizeof (uint16_t));
+
+  for (int i = 0; i < macro->name_length; i++) {
+    macro->name[i*2] = name[i];
+  }
+  return macro;
+}
+
+uint8_t *vlc_kbd_macro_to_bytes(struct vlc_kbd_macro_t *macro, size_t *sz) {
+  *sz = sizeof (uint8_t) * 4 // header
+    + sizeof (uint32_t) * macro->entries_length // entries
+    + sizeof(uint8_t) * (macro->name_length + 2); // name
+  uint8_t *out = malloc(*sz);
+
+  uint16_t *out16 = (uint16_t *) out;
+
+  out16[0] = macro->entries_length;
+  out[2] = 0x01;
+  out[3] = macro->name_length;
+
+  for (int i = 0; i < macro->entries_length; i++) {
+    vlc_kbd_macro_entry_copy(&out[4 + 4 * i], macro->entries[i]);
+  }
+
+  for (int i = 0; i < macro->name_length + 1; i++) {
+    out[4 + 4 * macro->entries_length + i] = macro->name[i];
+  }
+
+  return out;
+}
+
+
+void vlc_kbd_macro_add_entry(
+    struct vlc_kbd_macro_t *macro, struct vlc_kbd_macro_entry_t *entry) {
+  macro->entries_length++;
+  macro->entries = realloc(
+    macro->entries,
+    sizeof (struct vlc_kbd_macro_entry_t *) * macro->entries_length);
+
+  macro->entries[macro->entries_length - 1] = entry;
+}
+
+struct vlc_kbd_macro_entry_t *vlc_kbd_macro_entry_new(
+    enum vlc_kbd_keycode_t keycode, bool modifier, uint16_t delay, bool down) {
+  struct vlc_kbd_macro_entry_t *entry =
+    malloc(sizeof (struct vlc_kbd_macro_entry_t));
+
+  entry->delay = delay;
+  entry->modifier = modifier;
+  entry->down = down;
+  entry->keycode = keycode;
+
+  return entry;
+}
+
+void vlc_kbd_macro_entry_copy(uint8_t *dst, struct vlc_kbd_macro_entry_t *entry) {
+  const uint16_t delay = entry->delay / 10;
+  dst[0] = delay & 0xff;
+  dst[1] = ((delay >> 8) & 0x0f) | (entry->down ? 0xa0 : 0x20);
+  dst[2] = entry->modifier ? 0x01 : 0x02;
+  dst[3] = entry->keycode;
+}
