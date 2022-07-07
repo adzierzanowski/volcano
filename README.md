@@ -44,7 +44,7 @@ a little bit more powerful and easier to use.
   - [Dependecies](#dependecies)
   - [Development status](#development-status)
     - [Implemented things](#implemented-things)
-    - [TODO](#todo)
+    - [In progress](#in-progress)
   - [Other files](#other-files)
   - [Contributing](#contributing)
 
@@ -280,14 +280,14 @@ To sniff USB communication between the keyboard and the original driver I used
 * setting the whole keyboard color in supported modes
 * clearing the whole keyboard
 * switching between color schemes
-* self-served driver control panel
+* self-hosted driver control panel
 * key mappings
+* setting the gradient in one of the color modes
 * updating settings on PnP
 
-### TODO
+### In progress
 
-* defining macros
-* setting the gradient in one of the color modes
+* macros (on branch macros)
 
 ## Other files
 
