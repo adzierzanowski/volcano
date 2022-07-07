@@ -37,8 +37,8 @@ volcanoctl:
 	@-mkdir -p $(BIN)
 	cp tools/volcanoctl $(BIN)/volcanoctl
 
-test: $(addprefix $(BUILD)/, keyboard.o fmt.o)
-	$(CC) test/main.c $^ $(CFLAGS) -o testbin
+test: $(addprefix $(BUILD)/, fmt.o keyboard.o)
+	$(CC) $^ test/main.c $(CFLAGS) -o testbin
 
 $(BUILD):
 	@-mkdir -p $@

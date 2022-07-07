@@ -278,7 +278,6 @@ bool vlc_kbd_send_end(libusb_device_handle *kbdh) {
   return vlc_kbd_va_send_and_recv(kbdh, 4, 0x04, 0x02, 0x00, 0x02);
 }
 
-
 const struct vlc_kbd_key_t *vlc_kbd_get_key(const char *name) {
   for (int i = 0; i < vlc_keys_sz; i++) {
     if (strcmp(name, vlc_kcolor_keys[i].name) == 0) {
@@ -382,119 +381,120 @@ bool vlc_kbd_set_mode(libusb_device_handle *kbdh, enum vlc_kbd_mode_t mode) {
     kbdh, 9, 0x04, mode, 0x00, 0x06, 0x01, 0x00, 0x00, 0x00, mode - 0x07);
 }
 
+
 bool vlc_kbd_remap(libusb_device_handle *kbdh, struct vlc_kbd_keymap_t *k) {
   uint8_t line1[64] = {
-    0x04,        0xd4,        0x02,       0x08,
-    0x38,        0x00,        0x00,       0x00,
-    0x02,        k->esc_m,    k->esc,     0x02,
-    k->tilde_m,  k->tilde,    0x02,       k->tab_m,
-    k->tab,      0x02,        k->caps_m,  k->caps,
-    0x02,        k->lshift_m, k->lshift,  0x02,
-    k->lctrl_m,  k->lctrl,    0x02,       k->f1_m,
-    k->f1,       0x02,        k->k1_m,    k->k1,
-    0x02,        k->q_m,      k->q,       0x02,
-    k->a_m,      k->a,        0x02,       0x02,
-    0x64,        0x02,        k->meta_m,  k->meta,
-    0x02,        k->f2_m,     k->f2,      0x02,
-    k->k2_m,     k->k2,       0x02,       k->w_m,
-    k->w,        0x02,        k->s_m,     k->s,
-    0x02,        k->z_m,      k->z,       0x02,
-    k->lalt_m,   k->lalt,     0x02,       0x02,
+    0x04,         0xd4,        0x02,       0x08,
+    0x38,         0x00,        0x00,       0x00,
+    k->esc_mk,    k->esc_m,    k->esc,     k->tilde_mk,
+    k->tilde_m,   k->tilde,    k->tab_mk,  k->tab_m,
+    k->tab,       k->caps_mk,  k->caps_m,  k->caps,
+    k->lshift_mk, k->lshift_m, k->lshift,  k->lctrl_mk,
+    k->lctrl_m,   k->lctrl,    k->f1_mk,   k->f1_m,
+    k->f1,        k->k1_mk,    k->k1_m,    k->k1,
+    k->q_mk,      k->q_m,      k->q,       k->a_mk,
+    k->a_m,       k->a,        0x02,       0x02,
+    0x64,         k->meta_mk,  k->meta_m,  k->meta,
+    k->f2_mk,     k->f2_m,     k->f2,      k->k2_mk,
+    k->k2_m,      k->k2,       k->w_mk,    k->w_m,
+    k->w,         k->s_mk,     k->s_m,     k->s,
+    k->z_mk,      k->z_m,      k->z,       k->lalt_mk,
+    k->lalt_m,    k->lalt,     k->f3_mk,   k->f3_m,
   };
 
   uint8_t line2[64] =  {
-    0x04,      0x13,    0x03,        0x08,
-    0x38,      0x38,    0x00,        0x00,
-    k->f3,     0x02,    k->k3_m,     k->k3,
-    0x02,      k->e_m,  k->e,        0x02,
-    k->d_m,    k->d,    0x02,        k->x_m,
-    k->x,      0x02,    k->space_m,  k->space,
-    0x02,      k->f4_m, k->f4,       0x02,
-    k->k4_m,   k->k4,   0x02,        k->r_m,
-    k->r,      0x02,    k->f_m,      k->f,
-    0x02,      k->c_m,  k->c,        0x02,
-    k->ralt_m, k->ralt, 0x02,        k->f5_m,
-    k->f5,     0x02,     k->k5_m,    k->k5,
-    0x02,      k->t_m,   k->t,       0x02,
-    k->g_m,    k->g,     0x02,       k->v_m,
-    k->v,      0x05,     0x02,       0x02,
-    0x02,      k->f7_m,  k->f7,      0x02,
+    0x04,      0x13,        0x03,        0x08,
+    0x38,      0x38,        0x00,        0x00,
+    k->f3,     k->k3_mk,    k->k3_m,     k->k3,
+    k->e_mk,   k->e_m,      k->e,        k->d_mk,
+    k->d_m,    k->d,        k->x_mk,     k->x_m,
+    k->x,      k->space_mk, k->space_m,  k->space,
+    k->f4_mk,  k->f4_m,     k->f4,       k->k4_mk,
+    k->k4_m,   k->k4,       k->r_mk,     k->r_m,
+    k->r,      k->f_mk,     k->f_m,      k->f,
+    k->c_mk,   k->c_m,      k->c,        k->ralt_mk,
+    k->ralt_m, k->ralt,     k->f5_mk,    k->f5_m,
+    k->f5,     k->k5_mk,    k->k5_m,     k->k5,
+    k->t_mk,   k->t_m,      k->t,        k->g_mk,
+    k->g_m,    k->g,        k->v_mk,     k->v_m,
+    k->v,      0x05,        0x02,        0x02,
+    k->f6_mk,  k->f6_m,     k->f6,       k->k6_mk,
   };
 
   uint8_t line3[64] = {
-    0x04,       0xce,     0x03,    0x08,
-    0x38,       0x70,     0x00,    0x00,
-    k->k6_m,    k->k6,    0x02,    k->y_m,
-    k->y,       0x02,     k->h_m,  k->h,
-    0x02,       k->b_m,   k->b,    0x02,
-    k->menu_m,  k->menu,  0x02,    k->f7_m,
-    k->f7,      0x02,     k->k7_m, k->k7,
-    0x02,       k->u_m,   k->u,    0x02,
-    k->j_m,     k->j,     0x02,    k->n_m,
-    k->n,       0x02,     0x01,    0x80,
-    0x02,       k->f8_m,  k->f8,   0x02,
-    k->k8_m,    k->k8,    0x02,    k->i_m,
-    k->i,       0x02,     k->k_m,  k->k,
-    0x02,       k->m_m,   k->m,    0x02,
-    k->rctrl_m, k->rctrl, 0x02,    k->f9_m,
-    k->f9,      0x02,     k->k9_m, k->k9
+    0x04,       0xce,     0x03,     0x08,
+    0x38,       0x70,     0x00,     0x00,
+    k->k6_m,    k->k6,    k->y_mk,  k->y_m,
+    k->y,       k->h_mk,  k->h_m,   k->h,
+    k->b_mk,    k->b_m,   k->b,     k->menu_mk,
+    k->menu_m,  k->menu,  k->f7_mk, k->f7_m,
+    k->f7,      k->k7_mk, k->k7_m,  k->k7,
+    k->u_mk,    k->u_m,   k->u,     k->j_mk,
+    k->j_m,     k->j,     k->n_mk,  k->n_m,
+    k->n,       0x02,     0x01,     0x80,
+    k->f8_mk,   k->f8_m,  k->f8,    k->k8_mk,
+    k->k8_m,    k->k8,    k->i_mk,  k->i_m,
+    k->i,       k->k_mk,  k->k_m,   k->k,
+    k->m_mk,    k->m_m,   k->m,     k->rctrl_mk,
+    k->rctrl_m, k->rctrl, k->f9_mk, k->f9_m,
+    k->f9,      k->k9_mk, k->k9_m,  k->k9
   };
 
   uint8_t line4[64] = {
-    0x04,      0xeb,          0x03,        0x08,
-    0x38,      0xa8,          0x00,        0x00,
-    0x02,      k->o_m,        k->o,        0x02,
-    k->l_m,    k->l,          0x02,        k->comma_m,
-    k->comma,  0x02,          0x00,        0x00,
-    0x02,      k->f10_m,      k->f10,      0x02,
-    k->k0_m,   k->k0,         0x02,        k->p_m,
-    k->p,      0x02,          k->colon_m,  k->colon,
-    0x02,      k->dot_m,      k->dot,      0x02,
-    0x00,      0x00,          0x02,        k->f11_m,
-    k->f11,    0x02,          k->minus_m,  k->minus,
-    0x02,      k->lbracket_m, k->lbracket, 0x02,
-    k->ap_m,   k->ap,         0x02,        k->slash_m,
-    k->slash,  0x02,          0x00,        0x00,
-    0x02,      k->f12_m,      k->f12,      0x02,
-    k->plus_m, k->plus,       0x02,        0x02
+    0x04,           0xeb,          0x03,           0x08,
+    0x38,           0xa8,          0x00,           0x00,
+    k->o_mk,        k->o_m,        k->o,           k->l_mk,
+    k->l_m,         k->l,          k->comma_mk,    k->comma_m,
+    k->comma,       0x02,          0x00,           0x00,
+    k->f10_mk,      k->f10_m,      k->f10,         k->k0_mk,
+    k->k0_m,        k->k0,         k->p_mk,        k->p_m,
+    k->p,           k->colon_mk,   k->colon_m,     k->colon,
+    k->dot_mk,      k->dot_m,      k->dot,         0x02,
+    0x00,           0x00,          k->f11_mk,      k->f11_m,
+    k->f11,         k->minus_mk,   k->minus_m,     k->minus,
+    k->lbracket_mk, k->lbracket_m, k->lbracket,    k->ap_mk,
+    k->ap_m,        k->ap,         k->slash_mk,    k->slash_m,
+    k->slash,       0x02,          0x00,           0x00,
+    k->f12_mk,      k->f12_m,      k->f12,         k->plus_mk,
+    k->plus_m,      k->plus,       k->rbracket_mk, k->rbracket_m
   };
 
   uint8_t line5[64] = {
-    0x04,        0xc0,           0x04,           0x08,
-    0x38,        0xe0,           0x00,           0x00,
-    k->rbracket, 0x02,           0x00,           0x00,
-    0x02,        0x02,           0x87,           0x02,
-    0x00,        0x00,           0x02,           0x00,
-    0x00,        0x02,           k->backspace_m, k->backspace,
-    0x02,        k->backslash_m, k->backslash,   0x02,
-    k->enter_m,  k->enter,       0x02,           k->rshift_m,
-    k->rshift,   0x02,           0x00,           0x00,
-    0x02,        k->ps_m,        k->ps,          0x02,
-    k->ins_m,    k->ins,         0x02,           k->del_m,
-    k->del,      0x02,           0x00,           0x00,
-    0x02,        0x00,           0x00,           0x02,
-    k->left_m,   k->left,        0x02,           k->sl_m,
-    k->sl,       0x02,           k->hm_m,        k->hm,
-    0x02,        k->end_m,       k->end,         0x02
+    0x04,            0xc0,            0x04,           0x08,
+    0x38,            0xe0,            0x00,           0x00,
+    k->rbracket,     0x02,            0x00,           0x00,
+    0x02,            0x02,            0x87,           0x02,
+    0x00,            0x00,            0x02,           0x00,
+    0x00,            k->backspace_mk, k->backspace_m, k->backspace,
+    k->backslash_mk, k->backslash_m,  k->backslash,   k->enter_mk,
+    k->enter_m,      k->enter,        k->rshift_mk,   k->rshift_m,
+    k->rshift,       0x02,            0x00,           0x00,
+    k->ps_mk,        k->ps_m,         k->ps,          k->ins_mk,
+    k->ins_m,        k->ins,          k->del_mk,      k->del_m,
+    k->del,          0x02,            0x00,           0x00,
+    0x02,            0x00,            0x00,           k->left_mk,
+    k->left_m,       k->left,         k->sl_mk,       k->sl_m,
+    k->sl,           k->hm_mk,        k->hm_m,        k->hm,
+    k->end_mk,       k->end_m,        k->end,         0x02
   };
 
   uint8_t line6[64] = {
-    0x04,       0xe2,     0x04,      0x08,
-    0x38,       0x18,     0x01,      0x00,
-    0x00,       0x00,     0x02,      k->up_m,
-    k->up,      0x02,     k->down_m, k->down,
-    0x02,       k->pb_m,  k->pb,     0x02,
-    k->pu_m,    k->pu,    0x02,      k->pd_m,
-    k->pd,      0x02,     0x00,      0x00,
-    0x02,       0x00,     0x00,      0x02,
-    k->right_m, k->right, 0x02,      0x00,
-    0x00,       0x02,     0x02,      0x53,
-    0x02,       0x02,     0x5f,      0x02,
-    0x02,       0x5c,     0x02,      0x02,
-    0x59,       0x02,     0x00,      0x00,
-    0x02,       0x00,     0x00,      0x02,
-    0x02,       0x54,     0x02,      0x02,
-    0x60,       0x02,     0x02,      0x5d
+    0x04,       0xe2,       0x04,      0x08,
+    0x38,       0x18,       0x01,      0x00,
+    0x00,       0x00,       k->up_mk,  k->up_m,
+    k->up,      k->down_mk, k->down_m, k->down,
+    k->pb_mk,   k->pb_m,    k->pb,     k->pu_mk,
+    k->pu_m,    k->pu,      k->pd_mk,  k->pd_m,
+    k->pd,      0x02,       0x00,      0x00,
+    0x02,       0x00,       0x00,      k->right_mk,
+    k->right_m, k->right,   0x02,      0x00,
+    0x00,       0x02,       0x02,      0x53,
+    0x02,       0x02,       0x5f,      0x02,
+    0x02,       0x5c,       0x02,      0x02,
+    0x59,       0x02,       0x00,      0x00,
+    0x02,       0x00,       0x00,      0x02,
+    0x02,       0x54,       0x02,      0x02,
+    0x60,       0x02,       0x02,      0x5d
   };
 
   uint8_t line7[64] = {
@@ -574,70 +574,135 @@ bool vlc_kbd_set_gradient(libusb_device_handle *kbdh, enum vlc_kbd_gradient_t gr
   return true;
 }
 
-struct vlc_kbd_macro_t *vlc_kbd_macro_new(const char *name) {
+struct vlc_kbd_macro_t *vlc_kbd_macro_new(const char *name, uint8_t cycle_count) {
   struct vlc_kbd_macro_t *macro = malloc(sizeof (struct vlc_kbd_macro_t));
-  macro->name_length = strlen(name) + 1;
+  macro->name_length = strlen(name);
+  macro->name = calloc(macro->name_length + 1, sizeof (char));
+  sprintf(macro->name, "%s", name);
   macro->entries_length = 0;
   macro->entries = NULL;
-  macro->name = calloc(macro->name_length + 1, sizeof (uint16_t));
-
-  for (int i = 0; i < macro->name_length; i++) {
-    macro->name[i*2] = name[i];
-  }
+  macro->cycle_count = cycle_count;
   return macro;
 }
 
-uint8_t *vlc_kbd_macro_to_bytes(struct vlc_kbd_macro_t *macro, size_t *sz) {
-  *sz = sizeof (uint8_t) * 4 // header
-    + sizeof (uint32_t) * macro->entries_length // entries
-    + sizeof(uint8_t) * (macro->name_length + 2); // name
-  uint8_t *out = malloc(*sz);
-
-  uint16_t *out16 = (uint16_t *) out;
-
-  out16[0] = macro->entries_length;
-  out[2] = 0x01;
-  out[3] = macro->name_length;
-
+void vlc_kbd_macro_free(struct vlc_kbd_macro_t *macro) {
   for (int i = 0; i < macro->entries_length; i++) {
-    vlc_kbd_macro_entry_copy(&out[4 + 4 * i], macro->entries[i]);
+    free(macro->entries[i]);
   }
-
-  for (int i = 0; i < macro->name_length + 1; i++) {
-    out[4 + 4 * macro->entries_length + i] = macro->name[i];
-  }
-
-  return out;
+  free(macro->entries);
+  free(macro->name);
+  free(macro);
 }
-
 
 void vlc_kbd_macro_add_entry(
-    struct vlc_kbd_macro_t *macro, struct vlc_kbd_macro_entry_t *entry) {
+    struct vlc_kbd_macro_t *macro,
+    enum vlc_kbd_keycode_t kcode,
+    bool is_modifier,
+    uint16_t delay,
+    bool down) {
   macro->entries_length++;
-  macro->entries = realloc(
-    macro->entries,
-    sizeof (struct vlc_kbd_macro_entry_t *) * macro->entries_length);
+  macro->entries = realloc(macro->entries, sizeof (struct vlc_kbd_macro_entry_t *) * macro->entries_length);
 
-  macro->entries[macro->entries_length - 1] = entry;
+  struct vlc_kbd_macro_entry_t *e = malloc(sizeof (struct vlc_kbd_macro_entry_t));
+  e->keycode = kcode;
+  e->modifier = is_modifier;
+  e->delay = delay;
+  e->down = down;
+
+  macro->entries[macro->entries_length - 1] = e;
 }
 
-struct vlc_kbd_macro_entry_t *vlc_kbd_macro_entry_new(
-    enum vlc_kbd_keycode_t keycode, bool modifier, uint16_t delay, bool down) {
-  struct vlc_kbd_macro_entry_t *entry =
-    malloc(sizeof (struct vlc_kbd_macro_entry_t));
+void vlc_kbd_macro_payload(
+    uint8_t *dst, struct vlc_kbd_macro_t **mkrs, uint16_t mkrcnt) {
+  // Magic numbers
+  dst[0] = 0xaa;
+  dst[1] = 0x55;
 
-  entry->delay = delay;
-  entry->modifier = modifier;
-  entry->down = down;
-  entry->keycode = keycode;
+  // Copy the length of the entire payload at 0x04 offset
+  uint16_t *ptr = (uint16_t *) &dst[4];
+  ptr[0] = mkrcnt;
 
-  return entry;
+  // Keep the count of the current total length of the data
+  uint16_t total = 0;
+
+  // At offset 0x10 there's information about offsets of the macro definitions
+  ptr = (uint16_t *) &dst[16];
+
+  // For each macro, add its offset
+  for (int i = 0; i < mkrcnt; i++) {
+    struct vlc_kbd_macro_t *m = mkrs[i];
+    // The whole data of the macro consists of its entries (4 bytes each),
+    // its metadata (4 bytes: entries length, and name length)
+    // and its name (2-byte chars)
+    uint16_t mkrsz = m->entries_length * 4 + 4 + m->name_length * 2;
+    // Add its offset info
+    ptr[i] = 16 + 2 * mkrcnt + total;
+    total += mkrsz;
+  }
+
+  // Now, having the total payload length, we can put it into 16-bit field
+  // at offset 0x02
+  total += 16 + 2 * mkrcnt;
+  ptr = (uint16_t *) &dst[2];
+  ptr[0] = total;
+
+  ptr = (uint16_t *) &dst[16];
+  for (int i = 0; i < mkrcnt; i++) {
+    struct vlc_kbd_macro_t *mkr = mkrs[i];
+    uint16_t moffset = ptr[i];
+    uint16_t *mptr = (uint16_t *) &dst[moffset];
+
+    mptr[0] = mkr->entries_length;
+    mptr[1] = (mkr->name_length << 8) | 0x01;
+
+    mptr = &mptr[2];
+
+    for (int j = 0; j < mkr->entries_length; j++) {
+      struct vlc_kbd_macro_entry_t *e = mkr->entries[j];
+      uint16_t dnd = ((e->delay / 10) & 0x0fff) | (e->down ? 0xa000 : 0x2000);
+      uint16_t modlen = (e->keycode << 8) | (e -> modifier ? 0x01 : 0x02);
+      mptr[0] = dnd;
+      mptr[1] = modlen;
+      mptr = &mptr[2];
+    }
+
+    for (int j = 0; j < mkr->name_length; j++) {
+      mptr[j] = mkr->name[j];
+    }
+  }
+
+  // Fill the remaining bytes with the previous packet's payload chunk
+  while (total % 56 != 0) {
+    dst[total] = dst[total - 56];
+    total++;
+  }
 }
 
-void vlc_kbd_macro_entry_copy(uint8_t *dst, struct vlc_kbd_macro_entry_t *entry) {
-  const uint16_t delay = entry->delay / 10;
-  dst[0] = delay & 0xff;
-  dst[1] = ((delay >> 8) & 0x0f) | (entry->down ? 0xa0 : 0x20);
-  dst[2] = entry->modifier ? 0x01 : 0x02;
-  dst[3] = entry->keycode;
+uint8_t **vlc_kbd_macro_packets(size_t *pck_cnt, uint8_t *payload) {
+  // Grab the length of the payload from itself
+  uint16_t *pldsz = (uint16_t *) &payload[2];
+
+  // Count how many packets are required
+  double pck_cntf = *pldsz / 56.0;
+  *pck_cnt = ceil(pck_cntf);
+
+  uint8_t **packets = calloc(*pck_cnt, sizeof (uint8_t *));
+  for (int i = 0; i < *pck_cnt; i++) {
+    uint8_t *pck = calloc(64, sizeof (uint8_t));
+    packets[i] = pck;
+
+    pck[0] = 0x04;
+    pck[1] = 0x00;
+    pck[2] = 0x00;
+    pck[3] = 0x0a;
+    pck[4] = i == *pck_cnt - 1 ? 0x08 : 0x38;
+    uint16_t *payload_offset = (uint16_t *) &pck[5];
+    *payload_offset = 56 * i;
+
+    for (int j = 0; j < 56; j++) {
+      pck[j+8] = payload[*payload_offset + j];
+    }
+  }
+
+  return packets;
 }

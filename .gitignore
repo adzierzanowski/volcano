@@ -12,3 +12,4 @@ test/
 bin/
 build/
 .env
+default.dat

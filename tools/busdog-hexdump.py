@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This script filters out the busdog output into a hexdump
 # containing only the outgoing messages
 
@@ -16,7 +18,7 @@ with open(sys.argv[1]) as f:
     sline = line.split('\t')
     print(sline)
     if sline[1].startswith('Out'):
-      out += line.split('\t')[-2] + '\n'
+      out += line.split('\t')[-3] + '\n'
 
   with open(sys.argv[2], 'w') as f:
     f.write(out)

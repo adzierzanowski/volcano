@@ -1,6 +1,7 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include <math.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -52,6 +53,17 @@ struct vlc_kbd_keymap_t {
   uint8_t f12_m, ps_m, sl_m, pb_m, ins_m, hm_m, pu_m, del_m, end_m, pd_m;
   uint8_t right_m, left_m, down_m, up_m, lshift_m, rshift_m, lalt_m, ralt_m;
   uint8_t lctrl_m, rctrl_m, meta_m, menu_m;
+
+  uint8_t a_mk, b_mk, c_mk, d_mk, e_mk, f_mk, g_mk, h_mk, i_mk, j_mk, k_mk, l_mk, m_mk, n_mk;
+  uint8_t o_mk, p_mk, q_mk, r_mk, s_mk, t_mk, u_mk, v_mk, w_mk, x_mk, y_mk, z_mk;
+  uint8_t k1_mk, k2_mk, k3_mk, k4_mk, k5_mk, k6_mk, k7_mk, k8_mk, k9_mk, k0_mk;
+  uint8_t enter_mk, esc_mk, backspace_mk, tab_mk, space_mk, minus_mk, plus_mk;
+  uint8_t lbracket_mk, rbracket_mk, backslash_mk, colon_mk, ap_mk, tilde_mk;
+  uint8_t comma_mk, dot_mk, slash_mk, caps_mk;
+  uint8_t f1_mk, f2_mk, f3_mk, f4_mk, f5_mk, f6_mk, f7_mk, f8_mk, f9_mk, f10_mk, f11_mk;
+  uint8_t f12_mk, ps_mk, sl_mk, pb_mk, ins_mk, hm_mk, pu_mk, del_mk, end_mk, pd_mk;
+  uint8_t right_mk, left_mk, down_mk, up_mk, lshift_mk, rshift_mk, lalt_mk, ralt_mk;
+  uint8_t lctrl_mk, rctrl_mk, meta_mk, menu_mk;
 };
 
 // USB report rate
@@ -156,21 +168,6 @@ enum vlc_kbd_keycode_t {
   VLC_KBD_KMAP_UP = 0x52,
 };
 
-// Struct representing a single entry in a macro definition
-struct vlc_kbd_macro_entry_t {
-  enum vlc_kbd_keycode_t keycode;
-  uint16_t delay;
-  bool down;
-  bool modifier;
-};
-
-// Struct representing a macro definition
-struct vlc_kbd_macro_t {
-  uint16_t entries_length;
-  uint16_t name_length;
-  struct vlc_kbd_macro_entry_t **entries;
-  uint16_t *name;
-};
 
 // Color mode codes
 enum vlc_kbd_mode_t {                    // Original name             Options
@@ -249,7 +246,6 @@ bool vlc_kbd_send_start(libusb_device_handle *kbdh);
 // Sends the end data frame to the keyboard
 bool vlc_kbd_send_end(libusb_device_handle *kbdh);
 
-
 // Remaps the keys as defined in the `kmap` structure
 bool vlc_kbd_remap(libusb_device_handle *kbdh, struct vlc_kbd_keymap_t *kmap);
 
@@ -296,13 +292,44 @@ enum vlc_kbd_mode_t vlc_kbd_get_mode(const char *modestr);
 // Returns a key based on its name (some keys can have more than one name)
 const struct vlc_kbd_key_t *vlc_kbd_get_key(const char *name);
 
+// Struct representing a single entry in a macro definition
+struct vlc_kbd_macro_entry_t {
+  enum vlc_kbd_keycode_t keycode;
+  uint16_t delay;
+  bool down;
+  bool modifier;
+};
 
-struct vlc_kbd_macro_t *vlc_kbd_macro_new(const char *name);
-uint8_t *vlc_kbd_macro_to_bytes(struct vlc_kbd_macro_t *macro, size_t *sz);
+// Struct representing a macro definition
+struct vlc_kbd_macro_t {
+  size_t entries_length;
+  size_t name_length;
+  struct vlc_kbd_macro_entry_t **entries;
+  char *name;
+  uint8_t cycle_count;
+};
+
+// Creates a new macro definition
+struct vlc_kbd_macro_t *vlc_kbd_macro_new(const char *name, uint8_t cycle_count);
+
+// Frees the memory reserved for a `macro`
+void vlc_kbd_macro_free(struct vlc_kbd_macro_t *macro);
+
+// Adds an entry (i.e. definition of a key press) into the `macro` struct
 void vlc_kbd_macro_add_entry(
-  struct vlc_kbd_macro_t *macro, struct vlc_kbd_macro_entry_t *entry);
-struct vlc_kbd_macro_entry_t *vlc_kbd_macro_entry_new(
-  enum vlc_kbd_keycode_t keycode, bool modifier, uint16_t delay, bool down);
-void vlc_kbd_macro_entry_copy(uint8_t *dst, struct vlc_kbd_macro_entry_t *entry);
+  struct vlc_kbd_macro_t *macro,
+  enum vlc_kbd_keycode_t kcode,
+  bool is_modifier,
+  uint16_t delay,
+  bool down);
+
+// Copies the macros defined in the `mkrs` struct into a `dst` buffer in a
+// continuous payload form (which has to be later divided into separate packets
+// before sending it to the keyboard)
+void vlc_kbd_macro_payload(
+  uint8_t *dst, struct vlc_kbd_macro_t **mkrs, uint16_t mkrcnt);
+
+// Creates separate packets ready to be sent from the payload data
+uint8_t **vlc_kbd_macro_packets(size_t *pck_cnt, uint8_t *payload);
 
 #endif
