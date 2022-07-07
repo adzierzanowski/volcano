@@ -3,7 +3,7 @@ volcano
 __pycache__
 sharemap
 mkmap
-kmap.dat
+*.dat
 volcanod
 hotplug
 info
@@ -12,4 +12,3 @@ test/
 bin/
 build/
 .env
-default.dat
