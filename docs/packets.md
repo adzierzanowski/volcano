@@ -1,5 +1,26 @@
 # Modecom Volcano Lanparty RGB data format
 
+- [Modecom Volcano Lanparty RGB data format](#modecom-volcano-lanparty-rgb-data-format)
+      - [Control transfer setup packet](#control-transfer-setup-packet)
+- [Receiving data](#receiving-data)
+- [Data format](#data-format)
+- [Set single key color (only in custom mode)](#set-single-key-color-only-in-custom-mode)
+- [Set color for the entire keyboard](#set-color-for-the-entire-keyboard)
+- [Set rainbow mode](#set-rainbow-mode)
+- [Set color mode](#set-color-mode)
+- [Remap keys](#remap-keys)
+- [Set brightness](#set-brightness)
+- [Set speed (of the animation)](#set-speed-of-the-animation)
+- [Set USB report rate](#set-usb-report-rate)
+- [Set direction](#set-direction)
+- [Set gradient](#set-gradient)
+- [Macros](#macros)
+    - [Payload header](#payload-header)
+    - [Macro data](#macro-data)
+      - [Macro header](#macro-header)
+      - [Entry format](#entry-format)
+
+
 Each packet's data size is *usually* 64 bytes.
 
 ```
@@ -157,5 +178,99 @@ Where `D2` is the direction (0 or 1) and `D1` is `10 + D2`.
 Macros are similar to keymapping in regard of the command-payload pattern.
 
 ```
-04 b1 07 0a 38 00 00 00 PAYLOAD[56]
+04 b1 07 0a 38 00 00 00 PAYLOAD[0:56]
+04 2c 07 0a 38 38 00 00 PAYLOAD[56:56*2]
+...
+04 17 08 0a 36 e0 00 00 PAYLOAD[56*n-1:56*n]
+```
+
+### Payload header
+
+The payload starts with a magic number
+
+```
+aa 55
+```
+
+The next two bytes is the length of the whole payload. Let's say our payload
+is 278-bytes long. Hexadecimally, it's 0x0116:
+
+```
+aa 55 16 01
+```
+
+Next two bytes tell how many macros are included in the payload. If there are
+5 macros defined, the first six bytes of the payload will look like this:
+
+```
+aa 55 16 01 05 00
+```
+
+Then, there are 10 bytes which I don't know what they do:
+
+```
+magic   length  macro count   10 bytes of whatever
+aa 55 | 16 01 | 05 00       | 00 00 00 00 00 00 00 00 00 00
+```
+
+Then, for each macro, there's a 2-byte value which tell the offset of the
+macro data in the payload. In our case, there are 5 macros, so there'll be
+10 bytes with their offsets.
+
+```
+magic   length  macro count   10 bytes of whatever
+aa 55 | 16 01 | 05 00       | 00 00 00 00 00 00 00 00 00 00
+
+offsets
+macro #1   macro #2   macro #3   macro #4   macro #5
+1a 00    | 60 00    | a6 00    | c0 00    | e8 00
+```
+
+### Macro data
+
+#### Macro header
+
+Right after that, begin the macro data. Each macro consists of a 4-byte header,
+entries (4-bytes each) and its name.
+
+Suppose our macro has 12 entries, 1 cycle and its name is `MACRO_ONE`.
+The header contains the following information:
+
+```
+# of entries   # of cycles   length of the name
+0c 00        | 01          | 09
+```
+
+#### Entry format
+
+After the header there are entries. Each entry contains information about
+which key is pressed and how long is the delay after keypress.
+
+
+This data is a little bit more quirky. Say, we have 3450 ms delay after the
+keypress. We divide the delay by 10. Hexadecimally `hex(3450) = 0x159`:
+
+```
+59 01
+```
+
+Now, we have to tell if we are pressing the key or we're releasing it. If we're
+pressing down, we `OR` the second byte with `a0`, if we're releasing, we `OR` it
+with `20`. Let's say we press the key down:
+
+```
+59 a1
+```
+
+Then we have to tell if it's a modifier key (like SHIFT - `01`) or not (like A
+- `02`):
+
+```
+59 a1 02
+```
+
+The last thing is the keycode. For example for the key `A`:
+
+```
+59 a1 02 04
 ```
