@@ -155,3 +155,7 @@ Where `D2` is the direction (0 or 1) and `D1` is `10 + D2`.
 # Macros
 
 Macros are similar to keymapping in regard of the command-payload pattern.
+
+```
+04 b1 07 0a 38 00 00 00 PAYLOAD[56]
+```
