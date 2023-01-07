@@ -27,8 +27,8 @@ struct vlc_kbd_key_t {
 };
 
 // An array of the key codes used for setting a single key color
-const struct vlc_kbd_key_t vlc_kcolor_keys[111];
-const size_t vlc_keys_sz;
+extern const struct vlc_kbd_key_t vlc_kcolor_keys[111];
+extern const size_t vlc_keys_sz;
 
 // Keymapping struct
 // Mapping the keys is performed all at once, thus such a big struct
