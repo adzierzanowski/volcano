@@ -227,7 +227,7 @@ You can test these commands with, for example, `socat`:
 
 ```bash
 $ brew install socat
-$ echo mode matrix - socat - UNIX-CONNECT:/Users/user/.volcano.sock
+$ echo mode matrix | socat - UNIX-CONNECT:/Users/user/.volcano.sock
 VLC_OK
 ```
 
